@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Pausen- & Cover-Manager</title>
+  
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#090d16">
+
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #131b2e;
+      --border: #23304a;
+      --text: #f1f5f9;
+      --muted: #8493a8;
+      --primary: #38bdf8;
+      --danger: #ef4444;
+      --conflict-zone: rgba(239, 68, 68, 0.35);
+      --conflict-border: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 8px; padding-bottom: 90px; }
+    
+    .top-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    h1 { font-size: 1.05rem; color: var(--primary); }
+    .action-buttons { display: flex; gap: 6px; }
+    .btn-toggle { background: #22c55e; color: #000; font-weight: bold; border: none; padding: 7px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
+    .btn-settings { background: #334155; color: #fff; border: 1px solid var(--border); padding: 7px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
+    .btn-auto { background: #f59e0b; color: #000; font-weight: bold; border: none; padding: 7px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; width: 100%; margin-bottom: 8px; }
+
+    .legend-bar { display: flex; gap: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; margin-bottom: 8px; font-size: 0.75rem; flex-wrap: wrap; align-items: center; }
+    .badge-cov { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #fff; font-size: 0.7rem; }
+
+    .chart-wrapper {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      position: relative;
+    }
+    .chart-inner { min-width: 620px; position: relative; }
+    .timeline-head { height: 26px; display: flex; margin-left: 95px; border-bottom: 1px solid var(--border); position: relative; background: #0c1220; }
+    .tick-label { position: absolute; transform: translateX(-50%); font-size: 0.65rem; color: var(--muted); font-weight: 600; top: 5px; }
+
+    .chart-row { display: flex; height: 30px; border-bottom: 1px solid #1a2338; position: relative; align-items: center; }
+    .chart-row:nth-child(even) { background: rgba(255,255,255,0.015); }
+    .col-name { width: 95px; min-width: 95px; font-size: 0.72rem; font-weight: 600; padding-left: 6px; border-right: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .col-track { flex: 1; height: 100%; position: relative; }
+
+    .conflict-band { position: absolute; top: 0; bottom: 0; background: var(--conflict-zone); border-left: 1px solid var(--conflict-border); border-right: 1px solid var(--conflict-border); pointer-events: none; z-index: 1; }
+
+    .p-bar {
+      position: absolute; top: 3px; height: 24px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; color: #fff;
+      display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 2; overflow: hidden; white-space: nowrap;
+    }
+
+    .edit-container { margin-top: 12px; }
+    .person-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; }
+    .p-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 600; }
+    .p-controls { display: flex; gap: 4px; align-items: center; margin-top: 5px; flex-wrap: wrap; background: #0c1220; padding: 4px; border-radius: 4px; }
+    input[type="time"], select { background: #131b2e; border: 1px solid var(--border); color: #fff; padding: 3px 5px; border-radius: 4px; font-size: 0.75rem; }
+    button.btn-util { background: #23304a; border: 1px solid #334155; color: #fff; padding: 3px 6px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; }
+    button.btn-add { background: #38bdf8; color: #000; font-weight: bold; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; }
+    .btn-del { color: #f87171; background: transparent; border: none; font-size: 0.85rem; margin-left: auto; cursor: pointer; }
+
+    /* Modal Setup Wizard (Standardmäßig direkt sichtbar im HTML!) */
+    .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.92); display: flex; justify-content: center; align-items: center; z-index: 100; padding: 12px; }
+    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 16px; }
+    .modal-title { font-size: 1.1rem; color: var(--primary); margin-bottom: 4px; font-weight: bold; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+    
+    .entry-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+    .entry-row input { flex: 1; background: #0c1220; border: 1px solid var(--border); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.8rem; }
+    .entry-del { background: transparent; border: none; color: var(--danger); font-size: 1.1rem; cursor: pointer; padding: 0 6px; }
+    .btn-more { background: #1e293b; border: 1px dashed var(--border); color: var(--primary); width: 100%; padding: 6px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-top: 4px; }
+    .wz-error { display: none; background: rgba(239, 68, 68, 0.2); border: 1px solid var(--danger); color: #fca5a5; padding: 6px; border-radius: 4px; font-size: 0.75rem; margin-bottom: 10px; font-weight: bold; }
+
+    body.screenshot-mode .edit-container, body.screenshot-mode .btn-auto { display: none !important; }
+    body.screenshot-mode .btn-toggle { background: #f59e0b; color: #000; }
+    body.screenshot-mode .btn-settings { display: none !important; }
+    body.screenshot-mode { padding: 4px; }
+  </style>
+</head>
+<body>
+
+  <div class="top-section">
+    <div>
+      <h1 id="app-heading">Pausen- & Cover-Manager</h1>
+      <div style="font-size:0.7rem; color:var(--muted);">Einsatz & Kapazitätsplanung</div>
+    </div>
+    <div class="action-buttons">
+      <button class="btn-settings" onclick="openWizard()">⚙️ Setup</button>
+      <button class="btn-toggle" id="mode-btn" onclick="toggleScreenshotMode()">📸 Screenshot</button>
+    </div>
+  </div>
+
+  <button class="btn-auto" onclick="autoGenerateBreaks()">⚡ Pausen automatisch optimal verteilen</button>
+
+  <div class="legend-bar" id="legend-container"></div>
+
+  <div class="chart-wrapper">
+    <div class="chart-inner">
+      <div id="conflict-layer" style="position:absolute; left:95px; right:0; top:0; bottom:0; pointer-events:none; z-index:1;"></div>
+      <div class="timeline-head" id="head-ticks"></div>
+      <div id="gantt-rows"></div>
+    </div>
+  </div>
+
+  <div class="edit-container" id="edit-area">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <span style="font-size:0.75rem; color:var(--muted); font-weight:bold;">Mitarbeiter Pausen:</span>
+      <button onclick="clearOnlyBreaks()" style="background:transparent; border:none; color:#f87171; font-size:0.75rem; cursor:pointer;">Pausen leeren (Neuer Tag)</button>
+    </div>
+    <div id="people-list"></div>
+  </div>
+
+  <!-- SETUP WIZARD (Initial standardmäßig geöffnet) -->
+  <div class="modal-backdrop" id="wizard-modal">
+    <div class="modal-box">
+      <div class="modal-title">Team- & Schicht-Setup</div>
+      <p style="font-size:0.75rem; color:var(--muted); margin-bottom:12px;">Namen eintragen und Zeiten festlegen.</p>
+
+      <div id="wz-err-box" class="wz-error">Bitte mindestens 1 Cover und 1 Mitarbeiter eintragen!</div>
+
+      <div style="display:flex; gap:8px;" class="form-group">
+        <div style="flex:1;">
+          <label>Cover Startzeit:</label>
+          <input type="time" id="wz-cover-start" style="width:100%; background:#0c1220; border:1px solid var(--border); color:#fff; padding:6px; border-radius:4px;" value="08:45">
+        </div>
+        <div style="flex:1;">
+          <label>Cover Endzeit:</label>
+          <input type="time" id="wz-cover-end" style="width:100%; background:#0c1220; border:1px solid var(--border); color:#fff; padding:6px; border-radius:4px;" value="15:00">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Break-Cover (Springer):</label>
+        <div id="wz-cover-fields"></div>
+        <button type="button" class="btn-more" onclick="appendEmptyCover()">+ Weiteren Cover hinzufügen</button>
+      </div>
+
+      <div class="form-group">
+        <label>Teammitglieder (von der Liste):</label>
+        <div id="wz-people-fields"></div>
+        <button type="button" class="btn-more" onclick="appendEmptyPerson()">+ Weiteres Teammitglied hinzufügen</button>
+      </div>
+
+      <div style="display:flex; gap:6px; margin-top:16px;">
+        <button type="button" class="btn-toggle" style="flex:1; padding:10px;" onclick="saveWizard()">Speichern & Starten</button>
+        <button type="button" class="btn-settings" style="padding:10px;" onclick="closeWizard()">Schließen</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+var COVER_PALETTE = ["#0284c7", "#9333ea", "#ea580c", "#10b981", "#ec4899", "#8b5cf6", "#f59e0b"];
+
+var config = {
+  coverStart: "08:45",
+  coverEnd: "15:00",
+  covers: []
+};
+
+var people = [];
+var tempCovers = ["", "", ""];
+var tempPeople = ["", "", "", ""];
+
+function toM(str) {
+  if (!str) return 0;
+  var p = str.split(":");
+  return parseInt(p[0], 10) * 60 + parseInt(p[1], 10);
+}
+
+function toTimeStr(mins) {
+  var h = String(Math.floor(mins / 60)).padStart(2, '0');
+  var m = String(mins % 60).padStart(2, '0');
+  return h + ":" + m;
+}
+
+function safeSetStorage(key, val) {
+  try {
+    localStorage.setItem(key, JSON.stringify(val));
+  } catch(e) {
+    console.warn("Storage nicht verfügbar");
+  }
+}
+
+function safeGetStorage(key) {
+  try {
+    var item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : null;
+  } catch(e) {
+    return null;
+  }
+}
+
+function openWizard() {
+  document.getElementById("wz-err-box").style.display = "none";
+  document.getElementById("wz-cover-start").value = config.coverStart || "08:45";
+  document.getElementById("wz-cover-end").value = config.coverEnd || "15:00";
+  
+  if (config.covers && config.covers.length > 0) {
+    tempCovers = config.covers.map(function(c){ return c.name; });
+  } else {
+    tempCovers = ["", "", ""];
+  }
+
+  if (people && people.length > 0) {
+    tempPeople = people.map(function(p){ return p.name; });
+  } else {
+    tempPeople = ["", "", "", ""];
+  }
+
+  renderWizardFields();
+  document.getElementById("wizard-modal").style.display = "flex";
+}
+
+function closeWizard() {
+  if (config.covers.length > 0 && people.length > 0) {
+    document.getElementById("wizard-modal").style.display = "none";
+  }
+}
+
+function renderWizardFields() {
+  var cBox = document.getElementById("wz-cover-fields");
+  cBox.innerHTML = "";
+  tempCovers.forEach(function(val, idx) {
+    var row = document.createElement("div");
+    row.className = "entry-row";
+    row.innerHTML = 
+      '<input type="text" placeholder="Cover ' + (idx + 1) + '" value="' + (val || '') + '" ' +
+      'onchange="tempCovers[' + idx + ']=this.value; if(' + idx + '===' + (tempCovers.length - 1) + ' && this.value.trim()){appendEmptyCover();}">' +
+      '<button class="entry-del" type="button" onclick="deleteCover(' + idx + ')">✕</button>';
+    cBox.appendChild(row);
+  });
+
+  var pBox = document.getElementById("wz-people-fields");
+  pBox.innerHTML = "";
+  tempPeople.forEach(function(val, idx) {
+    var row = document.createElement("div");
+    row.className = "entry-row";
+    row.innerHTML = 
+      '<input type="text" placeholder="Mitarbeiter ' + (idx + 1) + '" value="' + (val || '') + '" ' +
+      'onchange="tempPeople[' + idx + ']=this.value; if(' + idx + '===' + (tempPeople.length - 1) + ' && this.value.trim()){appendEmptyPerson();}">' +
+      '<button class="entry-del" type="button" onclick="deletePerson(' + idx + ')">✕</button>';
+    pBox.appendChild(row);
+  });
+}
+
+function appendEmptyCover() { tempCovers.push(""); renderWizardFields(); }
+function deleteCover(idx) { tempCovers.splice(idx, 1); if(tempCovers.length===0) tempCovers.push(""); renderWizardFields(); }
+
+function appendEmptyPerson() { tempPeople.push(""); renderWizardFields(); }
+function deletePerson(idx) { tempPeople.splice(idx, 1); if(tempPeople.length===0) tempPeople.push(""); renderWizardFields(); }
+
+function saveWizard() {
+  var cInputs = document.querySelectorAll("#wz-cover-fields input");
+  var pInputs = document.querySelectorAll("#wz-people-fields input");
+
+  var finalCovers = [];
+  cInputs.forEach(function(input){ if (input.value.trim()) finalCovers.push(input.value.trim()); });
+
+  var finalPeople = [];
+  pInputs.forEach(function(input){ if (input.value.trim()) finalPeople.push(input.value.trim()); });
+
+  if (finalCovers.length === 0 || finalPeople.length === 0) {
+    document.getElementById("wz-err-box").style.display = "block";
+    return;
+  }
+
+  config.coverStart = document.getElementById("wz-cover-start").value || "08:45";
+  config.coverEnd = document.getElementById("wz-cover-end").value || "15:00";
+
+  config.covers = finalCovers.map(function(name, i) {
+    return {
+      id: i + 1,
+      tag: name.charAt(0).toUpperCase(),
+      name: name,
+      color: COVER_PALETTE[i % COVER_PALETTE.length]
+    };
+  });
+
+  people = finalPeople.map(function(name, i) {
+    return { id: i + 1, name: name, p1: null, p2: null };
+  });
+
+  safeSetStorage("final_pm_cfg", config);
+  safeSetStorage("final_pm_ppl", people);
+
+  document.getElementById("wizard-modal").style.display = "none";
+  render();
+}
+
+function clearOnlyBreaks() {
+  people.forEach(function(p){ p.p1 = null; p.p2 = null; });
+  safeSetStorage("final_pm_ppl", people);
+  render();
+}
+
+function autoGenerateBreaks() {
+  var cStart = toM(config.coverStart);
+  var cEnd = toM(config.coverEnd);
+
+  var coverBusy = {};
+  config.covers.forEach(function(c){ coverBusy[c.id] = cStart; });
+
+  people.forEach(function(p) {
+    var earliestCoverId = config.covers[0].id;
+    var minBusy = coverBusy[earliestCoverId];
+    config.covers.forEach(function(c) {
+      if (coverBusy[c.id] < minBusy) {
+        minBusy = coverBusy[c.id];
+        earliestCoverId = c.id;
+      }
+    });
+
+    var bStart = minBusy;
+    if (bStart + 60 <= cEnd) {
+      p.p1 = { start: toTimeStr(bStart), dur: 60 };
+      p.p2 = null;
+      coverBusy[earliestCoverId] = bStart + 60;
+    } else if (bStart + 30 <= cEnd) {
+      p.p1 = { start: toTimeStr(bStart), dur: 30 };
+      p.p2 = null;
+      coverBusy[earliestCoverId] = bStart + 30;
+    }
+  });
+
+  safeSetStorage("final_pm_ppl", people);
+  render();
+}
+
+function renderTicks() {
+  var el = document.getElementById("head-ticks");
+  el.innerHTML = "";
+  var tStart = Math.floor(toM(config.coverStart || "08:45") / 60) * 60;
+  var tEnd = Math.ceil(toM(config.coverEnd || "15:00") / 60) * 60 + 30;
+  var total = tEnd - tStart;
+
+  for (var m = tStart; m <= tEnd; m += 30) {
+    var pct = ((m - tStart) / total) * 100;
+    var d = document.createElement("div");
+    d.className = "tick-label";
+    d.style.left = pct + "%";
+    d.innerText = toTimeStr(m);
+    el.appendChild(d);
+  }
+}
+
+function updatePlan() {
+  if (!config.covers || config.covers.length === 0) return;
+
+  var tStart = Math.floor(toM(config.coverStart) / 60) * 60;
+  var tEnd = Math.ceil(toM(config.coverEnd) / 60) * 60 + 30;
+  var total = tEnd - tStart;
+  var maxCap = config.covers.length;
+
+  var minuteUsage = {};
+  for (var m = tStart; m < tEnd; m++) minuteUsage[m] = 0;
+
+  var allBreaks = [];
+  people.forEach(function(p) {
+    if (p.p1) {
+      var s = toM(p.p1.start);
+      var e = s + p.p1.dur;
+      allBreaks.push({ pId: p.id, start: s, dur: p.p1.dur, end: e });
+      for (var t = s; t < e; t++) { if (minuteUsage[t] !== undefined) minuteUsage[t]++; }
+    }
+    if (p.p2) {
+      var s = toM(p.p2.start);
+      var e = s + p.p2.dur;
+      allBreaks.push({ pId: p.id, start: s, dur: p.p2.dur, end: e });
+      for (var t = s; t < e; t++) { if (minuteUsage[t] !== undefined) minuteUsage[t]++; }
+    }
+  });
+
+  var cLayer = document.getElementById("conflict-layer");
+  cLayer.innerHTML = "";
+  var inConflict = false;
+  var confStart = 0;
+
+  for (var m = tStart; m <= tEnd; m++) {
+    var isOver = (minuteUsage[m] || 0) > maxCap;
+    if (isOver && !inConflict) {
+      inConflict = true; confStart = m;
+    } else if (!isOver && inConflict) {
+      inConflict = false;
+      var band = document.createElement("div");
+      band.className = "conflict-band";
+      band.style.left = (((confStart - tStart) / total) * 100) + "%";
+      band.style.width = (((m - confStart) / total) * 100) + "%";
+      cLayer.appendChild(band);
+    }
+  }
+
+  allBreaks.sort(function(a, b) { return a.start - b.start; });
+  var coverBusy = {};
+  var coverWorked = {};
+  config.covers.forEach(function(c) { coverBusy[c.id] = 0; coverWorked[c.id] = 0; });
+
+  allBreaks.forEach(function(b) {
+    var av = [];
+    config.covers.forEach(function(c) {
+      if (coverBusy[c.id] <= b.start) av.push(c.id);
+    });
+
+    if (av.length > 0) {
+      av.sort(function(idA, idB) { return coverWorked[idA] - coverWorked[idB]; });
+      var chosenId = av[0];
+      b.assigned = config.covers.find(function(c){ return c.id === chosenId; });
+      coverBusy[chosenId] = b.end;
+      coverWorked[chosenId] += b.dur;
+    } else {
+      b.assigned = { tag: "?", color: "#64748b" };
+    }
+  });
+
+  var leg = document.getElementById("legend-container");
+  leg.innerHTML = "<span style='font-size:0.7rem; color:var(--muted);'>Cover:</span>";
+  config.covers.forEach(function(c) {
+    leg.innerHTML += "<span class='badge-cov' style='background:" + c.color + "'>" + c.tag + ": " + c.name + " (" + (coverWorked[c.id] || 0) + "m)</span>";
+  });
+  leg.innerHTML += "<span style='margin-left:auto; color:#fca5a5; font-size:0.7rem; font-weight:bold;'>Max: " + maxCap + " zeitgleich</span>";
+
+  var gWrap = document.getElementById("gantt-rows");
+  gWrap.innerHTML = "";
+
+  people.forEach(function(p) {
+    var row = document.createElement("div");
+    row.className = "chart-row";
+
+    var nCol = document.createElement("div");
+    nCol.className = "col-name";
+    nCol.innerText = p.name;
+    row.appendChild(nCol);
+
+    var tCol = document.createElement("div");
+    tCol.className = "col-track";
+
+    var pBreaks = allBreaks.filter(function(b) { return b.pId === p.id; });
+    pBreaks.forEach(function(b) {
+      var bar = document.createElement("div");
+      bar.className = "p-bar";
+      bar.style.left = Math.max(0, ((b.start - tStart) / total) * 100) + "%";
+      bar.style.width = ((b.dur / total) * 100) + "%";
+      bar.style.background = b.assigned.color;
+      bar.innerText = b.assigned.tag + " • " + toTimeStr(b.start);
+      tCol.appendChild(bar);
+    });
+
+    row.appendChild(tCol);
+    gWrap.appendChild(row);
+  });
+}
+
+function renderEditForm() {
+  var wrap = document.getElementById("people-list");
+  wrap.innerHTML = "";
+
+  people.forEach(function(p) {
+    var card = document.createElement("div");
+    card.className = "person-card";
+
+    var html = '<div class="p-head"><span>' + p.name + '</span></div>';
+
+    if (p.p1) {
+      html += 
+        '<div class="p-controls">' +
+          '<span style="font-size:0.7rem; font-weight:bold; width:22px;">P1:</span>' +
+          '<input type="time" value="' + p.p1.start + '" onchange="changeTime(' + p.id + ', 1, this.value)">' +
+          '<select onchange="changeDur(' + p.id + ', 1, this.value)">' +
+            '<option value="30" ' + (p.p1.dur === 30 ? 'selected' : '') + '>30m</option>' +
+            '<option value="60" ' + (p.p1.dur === 60 ? 'selected' : '') + '>60m</option>' +
+          '</select>' +
+          '<button class="btn-util" onclick="shift(' + p.id + ', 1, -15)">-15m</button>' +
+          '<button class="btn-util" onclick="shift(' + p.id + ', 1, +15)">+15m</button>' +
+          '<button class="btn-del" onclick="delPause(' + p.id + ', 1)">✕</button>' +
+        '</div>';
+    }
+
+    if (p.p2) {
+      html += 
+        '<div class="p-controls">' +
+          '<span style="font-size:0.7rem; font-weight:bold; width:22px;">P2:</span>' +
+          '<input type="time" value="' + p.p2.start + '" onchange="changeTime(' + p.id + ', 2, this.value)">' +
+          '<span style="font-size:0.7rem; color:var(--muted);">30m</span>' +
+          '<button class="btn-util" onclick="shift(' + p.id + ', 2, -15)">-15m</button>' +
+          '<button class="btn-util" onclick="shift(' + p.id + ', 2, +15)">+15m</button>' +
+          '<button class="btn-del" onclick="delPause(' + p.id + ', 2)">✕</button>' +
+        '</div>';
+    }
+
+    if (!p.p1) {
+      html += '<button class="btn-add" style="margin-top:4px;" onclick="createPause(' + p.id + ', 1)">+ Pause eintragen</button>';
+    } else if (!p.p2 && p.p1.dur === 30) {
+      html += '<button class="btn-add" style="margin-top:4px; background:#475569; color:#fff;" onclick="createPause(' + p.id + ', 2)">+ 2. Pause (30m)</button>';
+    }
+
+    card.innerHTML = html;
+    wrap.appendChild(card);
+  });
+}
+
+function createPause(id, part) {
+  var p = people.find(function(x) { return x.id === id; });
+  if (!p) return;
+  var def = (part === 1) ? config.coverStart : "13:30";
+  if (part === 1) p.p1 = { start: def, dur: 30 };
+  else p.p2 = { start: def, dur: 30 };
+  safeSetStorage("final_pm_ppl", people);
+  render();
+}
+
+function delPause(id, part) {
+  var p = people.find(function(x) { return x.id === id; });
+  if (!p) return;
+  if (part === 1) p.p1 = null;
+  else p.p2 = null;
+  safeSetStorage("final_pm_ppl", people);
+  render();
+}
+
+function shift(id, part, delta) {
+  var p = people.find(function(x) { return x.id === id; });
+  var pause = (part === 1) ? p.p1 : p.p2;
+  if (!pause) return;
+  var cur = toM(pause.start) + delta;
+  pause.start = toTimeStr(cur);
+  safeSetStorage("final_pm_ppl", people);
+  render();
+}
+
+function changeTime(id, part, val) {
+  var p = people.find(function(x) { return x.id === id; });
+  if (part === 1 && p.p1) p.p1.start = val;
+  if (part === 2 && p.p2) p.p2.start = val;
+  safeSetStorage("final_pm_ppl", people);
+  render();
+}
+
+function changeDur(id, part, val) {
+  var p = people.find(function(x) { return x.id === id; });
+  if (part === 1 && p.p1) {
+    p.p1.dur = parseInt(val, 10);
+    if (p.p1.dur === 60) p.p2 = null;
+  }
+  safeSetStorage("final_pm_ppl", people);
+  render();
+}
+
+function toggleScreenshotMode() {
+  document.body.classList.toggle("screenshot-mode");
+  var btn = document.getElementById("mode-btn");
+  if (document.body.classList.contains("screenshot-mode")) {
+    btn.innerText = "✏️ Bearbeiten";
+  } else {
+    btn.innerText = "📸 Screenshot";
+  }
+}
+
+function render() {
+  renderTicks();
+  updatePlan();
+  renderEditForm();
+}
+
+// Initialer Check
+var sCfg = safeGetStorage("final_pm_cfg");
+var sPpl = safeGetStorage("final_pm_ppl");
+
+if (sCfg && sPpl && sCfg.covers && sCfg.covers.length > 0) {
+  config = sCfg;
+  people = sPpl;
+  document.getElementById("wizard-modal").style.display = "none";
+  render();
+} else {
+  // Wenn noch nie eingerichtet: Setup ist direkt sichtbar
+  renderWizardFields();
+}
+</script>
+</body>
+</html>
