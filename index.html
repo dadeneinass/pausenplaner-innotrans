@@ -54,23 +54,32 @@
       cursor: grab; user-select: none;
     }
     .bar:active { cursor: grabbing; box-shadow: 0 4px 12px rgba(0,0,0,0.8); z-index: 10; opacity: 0.9; }
+    
+    /* Echte Doppelbelegung */
     .bar-conflict { background: #dc2626 !important; border: 2px solid #fff !important; animation: blink 1s infinite alternate; }
+    /* Wegzeit unter 10 Minuten: Gestrichelt + Warnung */
+    .bar-wegzeit-danger { border: 2px dashed #ef4444 !important; }
+    /* Wegzeit 10 bis unter 15 Minuten: Nur gestrichelt umrandet */
+    .bar-wegzeit-warn { border: 2px dashed #f59e0b !important; }
 
     @keyframes blink {
       from { box-shadow: 0 0 4px #ef4444; }
       to { box-shadow: 0 0 12px #f87171; }
     }
 
-    .edit-container { margin-top: 16px; }
-    .person-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
-    select, input[type="text"], input[type="time"] { background: #0c1424; border: 1px solid var(--border); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.78rem; }
+    /* AUFGERÄUMTE TABELLE UNTEN */
+    .table-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 16px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    th { text-align: left; padding: 8px; color: var(--muted); border-bottom: 1px solid var(--border); }
+    td { padding: 8px; border-bottom: 1px solid #1a2744; }
+    select, input[type="text"], input[type="time"], input[type="number"] { background: #0c1424; border: 1px solid var(--border); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
     .btn-edit { background: #243354; color: #fff; border: 1px solid var(--border); padding: 5px 10px; }
 
     .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 999; }
     .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; width: 440px; max-height: 90vh; overflow-y: auto; padding: 16px; }
     .modal-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 6px; }
 
-    body.screenshot-mode .edit-container, 
+    body.screenshot-mode .table-card, 
     body.screenshot-mode .btn-auto, 
     body.screenshot-mode .btn-util,
     body.screenshot-mode .btn-reset { display: none !important; }
@@ -82,7 +91,7 @@
   <div class="top-bar">
     <div>
       <h1>InnoTrans 2026 – Pausen- & Zonen-Planung</h1>
-      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">5-Minuten-Raster • Minutengenaue Anpassung • Exportfertig</div>
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">5-Minuten-Raster • Minutengenaue Anpassung • Wegzeit-Warnung</div>
     </div>
     <div class="btn-group">
       <button class="btn-util" onclick="openCoversModal()">⏱️ Springer-Zeiten & Namen</button>
@@ -101,12 +110,24 @@
     </div>
   </div>
 
-  <div class="edit-container">
-    <h3 style="font-size:0.9rem; color:var(--primary); margin-bottom:8px;">Team- & Zonen-Übersicht</h3>
-    <div id="people-list"></div>
+  <div class="table-card">
+    <h3 style="font-size:0.9rem; color:var(--primary); margin-bottom:8px;">Stationen & Zonen-Zuweisung</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Station / Position</th>
+          <th>Zone</th>
+          <th>Pausenzeit</th>
+          <th>Pausenspringer</th>
+          <th>Aktion</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
   </div>
 
-  <!-- MODAL: BALKEN BEARBEITEN (MINUTENGENAU) -->
+  <!-- MODAL: BALKEN BEARBEITEN (MINUTENGENAU + EIGENE PAUSENZEIT) -->
   <div class="modal" id="edit-modal" style="display:none;" onclick="closeModal()">
     <div class="modal-box" onclick="event.stopPropagation()">
       <h3 style="color:var(--primary); margin-bottom:10px;" id="m-title">Pause anpassen</h3>
@@ -117,12 +138,17 @@
       </div>
 
       <div style="margin-bottom:12px;">
-        <label style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Dauer (Minuten):</label>
-        <select id="m-dur" style="width:100%;">
-          <option value="30">30 Min</option>
-          <option value="45">45 Min</option>
-          <option value="60">60 Min</option>
-        </select>
+        <label style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Pausendauer in Minuten (zustehende Zeit):</label>
+        <div style="display:flex; gap:6px;">
+          <input type="number" id="m-dur" min="10" max="180" step="5" style="flex:1; font-size:0.9rem; font-weight:bold;">
+          <select onchange="if(this.value) document.getElementById('m-dur').value = this.value" style="width:110px;">
+            <option value="">Vorlage...</option>
+            <option value="30">30 Min</option>
+            <option value="45">45 Min</option>
+            <option value="60">60 Min</option>
+            <option value="90">90 Min</option>
+          </select>
+        </div>
       </div>
 
       <div style="margin-bottom:12px;">
@@ -167,15 +193,16 @@
   </div>
 
 <script>
+// Zonen neutral benannt ohne feste Namen in Klammern
 var ZONES = [
-  "Zone 1: CityCube & Halle 7 Süd (Henri)",
-  "Zone 2: Spange 1–4 West (Cairo)",
-  "Zone 3: Spange 3–7 Mitte (Joel)",
-  "Zone 4: Halle 5/6 & Foyer 24 (Ayse)",
-  "Zone 5: hub27 & Halle 25/26 (Samim)",
-  "Zone 6: Sterne & Ost-Eingang (Hassan)",
-  "Zone 7: Ausreißer & Weite Posten (Joris Runner)",
-  "Marshall-Haus & Großer Stern (Selbstversorger)"
+  "Zone 1: CityCube & Halle 7 Süd",
+  "Zone 2: Spange 1–4 West",
+  "Zone 3: Spange 3–7 Mitte",
+  "Zone 4: Halle 5/6 & Foyer 24",
+  "Zone 5: hub27 & Halle 25/26",
+  "Zone 6: Sterne & Ost-Eingang",
+  "Zone 7: Ausreißer & Weite Posten",
+  "Marshall-Haus & Großer Stern (selbstständig)"
 ];
 
 var appData = {
@@ -190,55 +217,55 @@ var appData = {
   ],
   people: [
     // ZONE 1 (Henri)
-    { id: 17, name: "Darius-Marvin Westerhold", desc: "C32 CityCube West (Ebene 1)", zone: "Zone 1: CityCube & Halle 7 Süd (Henri)", p: null },
-    { id: 20, name: "Benjamin Smajic", desc: "C36 CityCube Ost (Zwischenebene)", zone: "Zone 1: CityCube & Halle 7 Süd (Henri)", p: null },
-    { id: 9,  name: "Inti Emilio Wackwitz", desc: "C19 Halle 7.2a (Ebene 2)", zone: "Zone 1: CityCube & Halle 7 Süd (Henri)", p: null },
+    { id: 17, name: "Darius-Marvin Westerhold", desc: "C32 CityCube West (Ebene 1)", zone: "Zone 1: CityCube & Halle 7 Süd", p: null },
+    { id: 20, name: "Benjamin Smajic", desc: "C36 CityCube Ost (Zwischenebene)", zone: "Zone 1: CityCube & Halle 7 Süd", p: null },
+    { id: 9,  name: "Inti Emilio Wackwitz", desc: "C19 Halle 7.2a (Ebene 2)", zone: "Zone 1: CityCube & Halle 7 Süd", p: null },
 
     // ZONE 2 (Cairo)
-    { id: 1,  name: "Baran Cakmak", desc: "C31 Halle 1.1a/2.1a (Ebene 1)", zone: "Zone 2: Spange 1–4 West (Cairo)", p: null },
-    { id: 6,  name: "Lynn Magali Wende", desc: "C12 Halle 1.2a/2.2a (Ebene 2)", zone: "Zone 2: Spange 1–4 West (Cairo)", p: null },
-    { id: 7,  name: "Felix Spohr", desc: "C14 Halle 3.2a/4.2a (Ebene 2)", zone: "Zone 2: Spange 1–4 West (Cairo)", p: null },
+    { id: 1,  name: "Baran Cakmak", desc: "C31 Halle 1.1a/2.1a (Ebene 1)", zone: "Zone 2: Spange 1–4 West", p: null },
+    { id: 6,  name: "Lynn Magali Wende", desc: "C12 Halle 1.2a/2.2a (Ebene 2)", zone: "Zone 2: Spange 1–4 West", p: null },
+    { id: 7,  name: "Felix Spohr", desc: "C14 Halle 3.2a/4.2a (Ebene 2)", zone: "Zone 2: Spange 1–4 West", p: null },
 
     // ZONE 3 (Joel)
-    { id: 2,  name: "Gian Danke", desc: "C03 Halle 3.1/4.1a (Ebene 1)", zone: "Zone 3: Spange 3–7 Mitte (Joel)", p: null },
-    { id: 3,  name: "Tolga Sencan", desc: "C07 Halle 7.1b Foyer (Ebene 1)", zone: "Zone 3: Spange 3–7 Mitte (Joel)", p: null },
-    { id: 10, name: "Ognyana Samardzhieva", desc: "C22 Halle 7.2c/8.2 (Ebene 2)", zone: "Zone 3: Spange 3–7 Mitte (Joel)", p: null },
+    { id: 2,  name: "Gian Danke", desc: "C03 Halle 3.1/4.1a (Ebene 1)", zone: "Zone 3: Spange 3–7 Mitte", p: null },
+    { id: 3,  name: "Tolga Sencan", desc: "C07 Halle 7.1b Foyer (Ebene 1)", zone: "Zone 3: Spange 3–7 Mitte", p: null },
+    { id: 10, name: "Ognyana Samardzhieva", desc: "C22 Halle 7.2c/8.2 (Ebene 2)", zone: "Zone 3: Spange 3–7 Mitte", p: null },
 
     // ZONE 4 (Ayse)
-    { id: 22, name: "Finn Heyse", desc: "C16 Kopffoyer Halle 5.2a (Ebene 2)", zone: "Zone 4: Halle 5/6 & Foyer 24 (Ayse)", p: null },
-    { id: 8,  name: "Mavie Borch", desc: "C18 Halle 5.2b/6.2b (Ebene 2)", zone: "Zone 4: Halle 5/6 & Foyer 24 (Ayse)", p: null },
-    { id: 14, name: "Arthur Garner", desc: "C28 Halle 24 (Ebene 2)", zone: "Zone 4: Halle 5/6 & Foyer 24 (Ayse)", p: null },
+    { id: 22, name: "Finn Heyse", desc: "C16 Kopffoyer Halle 5.2a (Ebene 2)", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null },
+    { id: 8,  name: "Mavie Borch", desc: "C18 Halle 5.2b/6.2b (Ebene 2)", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null },
+    { id: 14, name: "Arthur Garner", desc: "C28 Halle 24 (Ebene 2)", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null },
 
     // ZONE 5 (Samim)
-    { id: 21, name: "Luka Obst", desc: "C38 Hub27 (Ebene 2)", zone: "Zone 5: hub27 & Halle 25/26 (Samim)", p: null },
-    { id: 15, name: "Princess Sarah Tuma", desc: "C29 Halle 25 (Ebene 2)", zone: "Zone 5: hub27 & Halle 25/26 (Samim)", p: null },
-    { id: 23, name: "Aleksa Belakova", desc: "C39 Halle 26 West (Ebene 2)", zone: "Zone 5: hub27 & Halle 25/26 (Samim)", p: null },
+    { id: 21, name: "Luka Obst", desc: "C38 Hub27 (Ebene 2)", zone: "Zone 5: hub27 & Halle 25/26", p: null },
+    { id: 15, name: "Princess Sarah Tuma", desc: "C29 Halle 25 (Ebene 2)", zone: "Zone 5: hub27 & Halle 25/26", p: null },
+    { id: 23, name: "Aleksa Belakova", desc: "C39 Halle 26 West (Ebene 2)", zone: "Zone 5: hub27 & Halle 25/26", p: null },
 
     // ZONE 6 (Hassan)
-    { id: 5,  name: "Franklin K. Ju Asante", desc: "C10 Kleiner Stern (Ebene 1)", zone: "Zone 6: Sterne & Ost-Eingang (Hassan)", p: null },
-    { id: 11, name: "Melisa Korkmaz", desc: "C23 Großer Stern (Ebene 2)", zone: "Zone 6: Sterne & Ost-Eingang (Hassan)", p: null },
-    { id: 16, name: "Karl Naaßner", desc: "C24 Kleiner Stern (Ebene 2)", zone: "Zone 6: Sterne & Ost-Eingang (Hassan)", p: null },
-    { id: 19, name: "Aiyana Tressel", desc: "C35 Halle 14.1 (Eingang Ost)", zone: "Zone 6: Sterne & Ost-Eingang (Hassan)", p: null },
+    { id: 5,  name: "Franklin K. Ju Asante", desc: "C10 Kleiner Stern (Ebene 1)", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
+    { id: 11, name: "Melisa Korkmaz", desc: "C23 Großer Stern (Ebene 2)", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
+    { id: 16, name: "Karl Naaßner", desc: "C24 Kleiner Stern (Ebene 2)", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
+    { id: 19, name: "Aiyana Tressel", desc: "C35 Halle 14.1 (Eingang Ost)", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
 
     // ZONE 7 (Joris Runner)
-    { id: 18, name: "Simon Ferber", desc: "C34 Eingang Halle 9 (Ebene 1)", zone: "Zone 7: Ausreißer & Weite Posten (Joris Runner)", p: null },
-    { id: 12, name: "Anna Ribbeck", desc: "C25 Eingang Nord / Palais 19", zone: "Zone 7: Ausreißer & Weite Posten (Joris Runner)", p: null },
-    { id: 13, name: "Simon Schreiner", desc: "C27 Trompete 20/21 (Ebene 2)", zone: "Zone 7: Ausreißer & Weite Posten (Joris Runner)", p: null },
+    { id: 18, name: "Simon Ferber", desc: "C34 Eingang Halle 9 (Ebene 1)", zone: "Zone 7: Ausreißer & Weite Posten", p: null },
+    { id: 12, name: "Anna Ribbeck", desc: "C25 Eingang Nord / Palais 19", zone: "Zone 7: Ausreißer & Weite Posten", p: null },
+    { id: 13, name: "Simon Schreiner", desc: "C27 Trompete 20/21 (Ebene 2)", zone: "Zone 7: Ausreißer & Weite Posten", p: null },
 
-    // SELBSTVERSORGER
-    { id: 4,  name: "Caroline Jansen", desc: "C09 Großer Stern (Doppel)", zone: "Marshall-Haus & Großer Stern (Selbstversorger)", p: null },
-    { id: 25, name: "Martina Errickson", desc: "C09 Großer Stern (Doppel)", zone: "Marshall-Haus & Großer Stern (Selbstversorger)", p: null },
-    { id: 24, name: "Johanna Riesopp", desc: "Marshall-Haus", zone: "Marshall-Haus & Großer Stern (Selbstversorger)", p: null },
-    { id: 26, name: "Osaze Okodolor", desc: "Marshall-Haus", zone: "Marshall-Haus & Großer Stern (Selbstversorger)", p: null }
+    // SELBSTSTÄNDIG
+    { id: 4,  name: "Caroline Jansen", desc: "C09 Großer Stern (Doppel)", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null },
+    { id: 25, name: "Martina Errickson", desc: "C09 Großer Stern (Doppel)", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null },
+    { id: 24, name: "Johanna Riesopp", desc: "Marshall-Haus", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null },
+    { id: 26, name: "Osaze Okodolor", desc: "Marshall-Haus", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null }
   ]
 };
 
 function persist() {
-  try { localStorage.setItem("innotrans_v15_5min", JSON.stringify(appData)); } catch(e){}
+  try { localStorage.setItem("innotrans_final_stable_v17", JSON.stringify(appData)); } catch(e){}
 }
 
 var loaded = null;
-try { loaded = JSON.parse(localStorage.getItem("innotrans_v15_5min")); } catch(e){}
+try { loaded = JSON.parse(localStorage.getItem("innotrans_final_stable_v17")); } catch(e){}
 if (loaded && loaded.covers && loaded.covers.length > 0) appData = loaded;
 
 function toM(str) {
@@ -357,15 +384,31 @@ function render() {
     }
   });
 
+  // Springer-spezifische Prüfung
   var conflictPIds = new Set();
+  var wegzeitDangerPIds = new Set(); // < 10 Min
+  var wegzeitWarnPIds = new Set();   // 10 bis < 15 Min
+
+  allBreaks.sort(function(a, b){ return a.start - b.start; });
+
   for (var i = 0; i < allBreaks.length; i++) {
     for (var j = i + 1; j < allBreaks.length; j++) {
       var b1 = allBreaks[i];
       var b2 = allBreaks[j];
+      
       if (b1.cover && b1.cover !== "Unbekannt" && b1.cover === b2.cover) {
         if (b1.start < b2.end && b2.start < b1.end) {
           conflictPIds.add(b1.pId);
           conflictPIds.add(b2.pId);
+        } else {
+          var gap = b2.start - b1.end;
+          if (gap >= 0 && gap < 10) {
+            wegzeitDangerPIds.add(b1.pId);
+            wegzeitDangerPIds.add(b2.pId);
+          } else if (gap >= 10 && gap < 15) {
+            wegzeitWarnPIds.add(b1.pId);
+            wegzeitWarnPIds.add(b2.pId);
+          }
         }
       }
     }
@@ -408,15 +451,32 @@ function render() {
       var b = allBreaks.find(function(x){ return x.pId === p.id; });
       if (b) {
         var isConflict = conflictPIds.has(p.id);
+        var isWegzeitDanger = wegzeitDangerPIds.has(p.id) && !isConflict;
+        var isWegzeitWarn = wegzeitWarnPIds.has(p.id) && !isConflict && !isWegzeitDanger;
+
         var covObj = appData.covers.find(function(c){ return c.name === b.cover; });
-        var color = isConflict ? "#dc2626" : (covObj ? covObj.color : "#475569");
+        var color = covObj ? covObj.color : "#475569";
 
         var bar = document.createElement("div");
-        bar.className = "bar " + (isConflict ? "bar-conflict" : "");
+        var warnClasses = "";
+        var labelPrefix = "";
+
+        if (isConflict) {
+          warnClasses = "bar-conflict";
+          labelPrefix = "⚠️ DOPPELBELEGUNG: ";
+        } else if (isWegzeitDanger) {
+          warnClasses = "bar-wegzeit-danger";
+          labelPrefix = "⚠️ Achtung Wegzeit: ";
+        } else if (isWegzeitWarn) {
+          warnClasses = "bar-wegzeit-warn";
+          labelPrefix = "";
+        }
+
+        bar.className = "bar " + warnClasses;
         bar.style.left = Math.max(0, ((b.start - T_START) / T_TOTAL) * 100) + "%";
         bar.style.width = ((b.dur / T_TOTAL) * 100) + "%";
         bar.style.background = color;
-        bar.innerText = (isConflict ? "⚠️ " : "") + b.cover.split(" ")[0] + " • " + toTimeStr(b.start);
+        bar.innerText = labelPrefix + b.cover.split(" ")[0] + " • " + toTimeStr(b.start);
 
         initDesktopDrag(bar, p.id, track);
 
@@ -432,10 +492,10 @@ function render() {
     });
   });
 
-  renderEditCards();
+  renderTable();
 }
 
-// 5-MINUTEN-RASTER BEIM DRAG & DROP
+// 5-MINUTEN-RASTER BEIM VERSCHIEBEN
 function initDesktopDrag(barEl, personId, trackEl) {
   var startX = 0, origLeftPct = 0, isDragging = false;
 
@@ -465,7 +525,7 @@ function initDesktopDrag(barEl, personId, trackEl) {
       if (barEl.dataset.dragged === "true") {
         var finalPct = parseFloat(barEl.style.left);
         var currentMins = T_START + (finalPct / 100) * T_TOTAL;
-        // EXAKT 5-MINUTEN RASTERN
+        // EXAKT 5-MINUTEN-RASTER
         var snappedMins = Math.round(currentMins / 5) * 5;
         
         var person = appData.people.find(function(x){ return x.id === personId; });
@@ -479,31 +539,30 @@ function initDesktopDrag(barEl, personId, trackEl) {
   };
 }
 
-function renderEditCards() {
-  var box = document.getElementById("people-list");
-  box.innerHTML = "";
+// TABELLE UNTEN
+function renderTable() {
+  var tb = document.getElementById("table-body");
+  tb.innerHTML = "";
 
   appData.people.forEach(function(p) {
-    var card = document.createElement("div");
-    card.className = "person-card";
+    var tr = document.createElement("tr");
 
-    var zoneSelect = '<select onchange="updatePersonZone(' + p.id + ', this.value)" style="margin-right:8px;">' +
+    var zoneSelect = '<select onchange="updatePersonZone(' + p.id + ', this.value)">' +
       ZONES.map(function(z){ return '<option value="' + z + '" ' + (p.zone === z ? 'selected' : '') + '>' + z + '</option>'; }).join('') +
       '</select>';
 
-    var info = p.p ? ('<b>' + p.p.start + ' Uhr</b> (' + p.p.dur + 'm) • ' + p.p.cover) : '<span style="color:var(--muted);">Keine Pause</span>';
+    var pTime = p.p ? (p.p.start + ' (' + p.p.dur + 'm)') : '<span style="color:var(--muted); font-style:italic;">selbstständig</span>';
+    var pCover = p.p ? ('<b>' + p.p.cover + '</b>') : '-';
 
-    card.innerHTML = 
-      '<div>' +
-        '<b>' + p.name + '</b> <span style="color:var(--muted); font-size:0.75rem;">(' + p.desc + ')</span>' +
-      '</div>' +
-      '<div style="display:flex; align-items:center;">' +
-        zoneSelect +
-        '<span style="font-size:0.75rem; min-width:180px;">' + info + '</span>' +
-        '<button class="btn-edit" onclick="openModal(' + p.id + ')">Ändern</button>' +
-      '</div>';
+    tr.innerHTML = 
+      '<td><b>' + p.name + '</b></td>' +
+      '<td>' + p.desc + '</td>' +
+      '<td>' + zoneSelect + '</td>' +
+      '<td>' + pTime + '</td>' +
+      '<td>' + pCover + '</td>' +
+      '<td><button class="btn-edit" onclick="openModal(' + p.id + ')">Bearbeiten</button></td>';
 
-    box.appendChild(card);
+    tb.appendChild(tr);
   });
 }
 
@@ -521,7 +580,7 @@ function openModal(pId) {
 
   document.getElementById("m-title").innerText = p.name + " (" + p.desc + ")";
   document.getElementById("m-start").value = p.p ? p.p.start : "11:15";
-  document.getElementById("m-dur").value = p.p ? p.p.dur : "60";
+  document.getElementById("m-dur").value = p.p ? p.p.dur : 60;
 
   var sel = document.getElementById("m-cover");
   sel.innerHTML = '<option value="">-- Fester Springer --</option>' + 
