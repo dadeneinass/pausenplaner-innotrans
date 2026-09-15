@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Pausen- & Cover-Manager</title>
+  <title>Pausen- & Zonen-Manager</title>
   
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -31,8 +31,9 @@
     .btn-settings { background: #334155; color: #fff; border: 1px solid var(--border); padding: 7px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
     .btn-auto { background: #f59e0b; color: #000; font-weight: bold; border: none; padding: 7px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; width: 100%; margin-bottom: 8px; }
 
-    .legend-bar { display: flex; gap: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; margin-bottom: 8px; font-size: 0.75rem; flex-wrap: wrap; align-items: center; }
+    .legend-bar { display: flex; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; margin-bottom: 8px; font-size: 0.75rem; flex-wrap: wrap; align-items: center; }
     .badge-cov { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #fff; font-size: 0.7rem; }
+    .zone-badge { font-size: 0.65rem; background: #1e293b; color: #38bdf8; border: 1px solid #334155; padding: 1px 4px; border-radius: 3px; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; }
 
     .chart-wrapper {
       background: var(--card);
@@ -42,43 +43,41 @@
       -webkit-overflow-scrolling: touch;
       position: relative;
     }
-    .chart-inner { min-width: 620px; position: relative; }
-    .timeline-head { height: 26px; display: flex; margin-left: 95px; border-bottom: 1px solid var(--border); position: relative; background: #0c1220; }
+    .chart-inner { min-width: 700px; position: relative; }
+    .timeline-head { height: 26px; display: flex; margin-left: 140px; border-bottom: 1px solid var(--border); position: relative; background: #0c1220; }
     .tick-label { position: absolute; transform: translateX(-50%); font-size: 0.65rem; color: var(--muted); font-weight: 600; top: 5px; }
 
-    .chart-row { display: flex; height: 30px; border-bottom: 1px solid #1a2338; position: relative; align-items: center; }
+    .chart-row { display: flex; height: 32px; border-bottom: 1px solid #1a2338; position: relative; align-items: center; }
     .chart-row:nth-child(even) { background: rgba(255,255,255,0.015); }
-    .col-name { width: 95px; min-width: 95px; font-size: 0.72rem; font-weight: 600; padding-left: 6px; border-right: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .col-name { width: 140px; min-width: 140px; font-size: 0.72rem; font-weight: 600; padding-left: 6px; border-right: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; flex-direction: column; justify-content: center; }
     .col-track { flex: 1; height: 100%; position: relative; }
 
     .conflict-band { position: absolute; top: 0; bottom: 0; background: var(--conflict-zone); border-left: 1px solid var(--conflict-border); border-right: 1px solid var(--conflict-border); pointer-events: none; z-index: 1; }
 
     .p-bar {
-      position: absolute; top: 3px; height: 24px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; color: #fff;
+      position: absolute; top: 3px; height: 26px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; color: #fff;
       display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 2; overflow: hidden; white-space: nowrap;
     }
+    .p-bar-fixed { outline: 2px solid #fff; }
 
     .edit-container { margin-top: 12px; }
     .person-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; }
     .p-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 600; }
     .p-controls { display: flex; gap: 4px; align-items: center; margin-top: 5px; flex-wrap: wrap; background: #0c1220; padding: 4px; border-radius: 4px; }
-    input[type="time"], select { background: #131b2e; border: 1px solid var(--border); color: #fff; padding: 3px 5px; border-radius: 4px; font-size: 0.75rem; }
+    input, select { background: #131b2e; border: 1px solid var(--border); color: #fff; padding: 3px 5px; border-radius: 4px; font-size: 0.75rem; }
     button.btn-util { background: #23304a; border: 1px solid #334155; color: #fff; padding: 3px 6px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; }
     button.btn-add { background: #38bdf8; color: #000; font-weight: bold; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; }
     .btn-del { color: #f87171; background: transparent; border: none; font-size: 0.85rem; margin-left: auto; cursor: pointer; }
 
-    /* Modal Setup Wizard (Standardmäßig direkt sichtbar im HTML!) */
-    .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.92); display: flex; justify-content: center; align-items: center; z-index: 100; padding: 12px; }
-    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 16px; }
-    .modal-title { font-size: 1.1rem; color: var(--primary); margin-bottom: 4px; font-weight: bold; }
+    /* Modal Setup */
+    .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.92); display: flex; justify-content: center; align-items: center; z-index: 100; padding: 10px; }
+    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; max-width: 540px; width: 100%; max-height: 92vh; overflow-y: auto; padding: 14px; }
+    .modal-title { font-size: 1.05rem; color: var(--primary); margin-bottom: 4px; font-weight: bold; }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
     
-    .entry-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
-    .entry-row input { flex: 1; background: #0c1220; border: 1px solid var(--border); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.8rem; }
-    .entry-del { background: transparent; border: none; color: var(--danger); font-size: 1.1rem; cursor: pointer; padding: 0 6px; }
+    .entry-row { display: flex; gap: 4px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; background: #0c1220; padding: 5px; border-radius: 4px; border: 1px solid #1e293b; }
     .btn-more { background: #1e293b; border: 1px dashed var(--border); color: var(--primary); width: 100%; padding: 6px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-top: 4px; }
-    .wz-error { display: none; background: rgba(239, 68, 68, 0.2); border: 1px solid var(--danger); color: #fca5a5; padding: 6px; border-radius: 4px; font-size: 0.75rem; margin-bottom: 10px; font-weight: bold; }
 
     body.screenshot-mode .edit-container, body.screenshot-mode .btn-auto { display: none !important; }
     body.screenshot-mode .btn-toggle { background: #f59e0b; color: #000; }
@@ -90,22 +89,22 @@
 
   <div class="top-section">
     <div>
-      <h1 id="app-heading">Pausen- & Cover-Manager</h1>
-      <div style="font-size:0.7rem; color:var(--muted);">Einsatz & Kapazitätsplanung</div>
+      <h1>Pausen- & Zonen-Manager</h1>
+      <div style="font-size:0.7rem; color:var(--muted);">6 Pausenspringer (inkl. Hassan) • 25 Messeeinsätze</div>
     </div>
     <div class="action-buttons">
-      <button class="btn-settings" onclick="openWizard()">⚙️ Setup</button>
+      <button class="btn-settings" onclick="openWizard()">⚙️ Setup & Zonen</button>
       <button class="btn-toggle" id="mode-btn" onclick="toggleScreenshotMode()">📸 Screenshot</button>
     </div>
   </div>
 
-  <button class="btn-auto" onclick="autoGenerateBreaks()">⚡ Pausen automatisch optimal verteilen</button>
+  <button class="btn-auto" onclick="autoGenerateBreaks()">⚡ Pausen nach Zonen optimal verteilen</button>
 
   <div class="legend-bar" id="legend-container"></div>
 
   <div class="chart-wrapper">
     <div class="chart-inner">
-      <div id="conflict-layer" style="position:absolute; left:95px; right:0; top:0; bottom:0; pointer-events:none; z-index:1;"></div>
+      <div id="conflict-layer" style="position:absolute; left:140px; right:0; top:0; bottom:0; pointer-events:none; z-index:1;"></div>
       <div class="timeline-head" id="head-ticks"></div>
       <div id="gantt-rows"></div>
     </div>
@@ -113,62 +112,94 @@
 
   <div class="edit-container" id="edit-area">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-      <span style="font-size:0.75rem; color:var(--muted); font-weight:bold;">Mitarbeiter Pausen:</span>
+      <span style="font-size:0.75rem; color:var(--muted); font-weight:bold;">Mitarbeiter & Pausenzeiten:</span>
       <button onclick="clearOnlyBreaks()" style="background:transparent; border:none; color:#f87171; font-size:0.75rem; cursor:pointer;">Pausen leeren (Neuer Tag)</button>
     </div>
     <div id="people-list"></div>
   </div>
 
-  <!-- SETUP WIZARD (Initial standardmäßig geöffnet) -->
-  <div class="modal-backdrop" id="wizard-modal">
+  <!-- SETUP MODAL -->
+  <div class="modal-backdrop" id="wizard-modal" style="display:none;">
     <div class="modal-box">
-      <div class="modal-title">Team- & Schicht-Setup</div>
-      <p style="font-size:0.75rem; color:var(--muted); margin-bottom:12px;">Namen eintragen und Zeiten festlegen.</p>
+      <div class="modal-title">Setup: Zonen & Anwesenheiten</div>
+      <p style="font-size:0.75rem; color:var(--muted); margin-bottom:10px;">Laufwege verkürzen durch Zonen- & Hallenzuteilung.</p>
 
-      <div id="wz-err-box" class="wz-error">Bitte mindestens 1 Cover und 1 Mitarbeiter eintragen!</div>
-
-      <div style="display:flex; gap:8px;" class="form-group">
-        <div style="flex:1;">
-          <label>Cover Startzeit:</label>
-          <input type="time" id="wz-cover-start" style="width:100%; background:#0c1220; border:1px solid var(--border); color:#fff; padding:6px; border-radius:4px;" value="08:45">
-        </div>
-        <div style="flex:1;">
-          <label>Cover Endzeit:</label>
-          <input type="time" id="wz-cover-end" style="width:100%; background:#0c1220; border:1px solid var(--border); color:#fff; padding:6px; border-radius:4px;" value="15:00">
-        </div>
+      <div class="form-group">
+        <label>Zonen / Hallengruppen (mit Komma trennen):</label>
+        <input type="text" id="wz-zones" style="width:100%;" value="Halle 1-5, Halle 7-9, Halle 14-25, Halle 26, CityCube, Marshall-Haus">
       </div>
 
       <div class="form-group">
-        <label>Break-Cover (Springer):</label>
+        <label>Break-Cover (Name, Schichtzeit & Zone):</label>
         <div id="wz-cover-fields"></div>
-        <button type="button" class="btn-more" onclick="appendEmptyCover()">+ Weiteren Cover hinzufügen</button>
+        <button type="button" class="btn-more" onclick="appendCoverRow()">+ Weiteren Cover hinzufügen</button>
       </div>
 
       <div class="form-group">
-        <label>Teammitglieder (von der Liste):</label>
+        <label>Teammitglieder (Name & Zone):</label>
         <div id="wz-people-fields"></div>
-        <button type="button" class="btn-more" onclick="appendEmptyPerson()">+ Weiteres Teammitglied hinzufügen</button>
+        <button type="button" class="btn-more" onclick="appendPersonRow()">+ Weiteres Teammitglied hinzufügen</button>
       </div>
 
-      <div style="display:flex; gap:6px; margin-top:16px;">
-        <button type="button" class="btn-toggle" style="flex:1; padding:10px;" onclick="saveWizard()">Speichern & Starten</button>
+      <div style="display:flex; gap:6px; margin-top:14px;">
+        <button type="button" class="btn-toggle" style="flex:1; padding:10px;" onclick="saveWizard()">Speichern & Aktualisieren</button>
         <button type="button" class="btn-settings" style="padding:10px;" onclick="closeWizard()">Schließen</button>
       </div>
     </div>
   </div>
 
 <script>
-var COVER_PALETTE = ["#0284c7", "#9333ea", "#ea580c", "#10b981", "#ec4899", "#8b5cf6", "#f59e0b"];
+var COVER_PALETTE = ["#0284c7", "#9333ea", "#ea580c", "#10b981", "#ec4899", "#8b5cf6", "#f59e0b", "#14b8a6"];
 
-var config = {
-  coverStart: "08:45",
-  coverEnd: "15:00",
-  covers: []
+// Daten mit Hassan als 6. Pausenspringer
+var appData = {
+  zones: ["Halle 1-5", "Halle 7-9", "Halle 14-25", "Halle 26", "CityCube", "Marshall-Haus"],
+  covers: [
+    { id: 1, tag: "HA", name: "Hassan Ali Akram", start: "07:30", end: "18:15", zone: "Alle", color: "#f59e0b" },
+    { id: 2, tag: "HR", name: "Henri Reininger", start: "11:15", end: "15:30", zone: "Alle", color: "#0284c7" },
+    { id: 3, tag: "CW", name: "Cairo Würdig", start: "11:15", end: "15:30", zone: "Alle", color: "#9333ea" },
+    { id: 4, tag: "OB", name: "Oluwafemi J. Brown", start: "11:15", end: "15:30", zone: "Alle", color: "#ea580c" },
+    { id: 5, tag: "AE", name: "Ayse M. Ejder", start: "11:15", end: "15:30", zone: "Alle", color: "#10b981" },
+    { id: 6, tag: "SH", name: "Samim Honardoust", start: "11:15", end: "15:30", zone: "Alle", color: "#ec4899" }
+  ],
+  people: [
+    { id: 1, name: "Baran Cakmak", zone: "C31 Halle 1.1a/2.1a", p1: null, p2: null },
+    { id: 2, name: "Gian Danke", zone: "C03 Halle 3.1/4.1a", p1: null, p2: null },
+    { id: 3, name: "Tolga Sencan", zone: "C07 Halle 7.1b Foyer", p1: null, p2: null },
+    { id: 4, name: "Martina Errickson", zone: "C09 Großer Stern", p1: null, p2: null },
+    { id: 5, name: "Franklin K. Ju Asante", zone: "C10 Kleiner Stern", p1: null, p2: null },
+    { id: 6, name: "Lynn Magali Wende", zone: "C12 Halle 1.2a/2.2a", p1: null, p2: null },
+    { id: 7, name: "Felix Spohr", zone: "C14 Halle 3.2a/4.2a", p1: null, p2: null },
+    { id: 8, name: "Mavie Borch", zone: "C18 Halle 5.2b/6.2b", p1: null, p2: null },
+    { id: 9, name: "Inti Emilio Wackwitz", zone: "C19 Halle 7/7.2a", p1: null, p2: null },
+    { id: 10, name: "Ognyana Samardzhieva", zone: "C22 Halle 7.2c/8.2", p1: null, p2: null },
+    { id: 11, name: "Melisa Korkmaz", zone: "C23 Großer Stern", p1: null, p2: null },
+    { id: 12, name: "Anna Ribbeck", zone: "C25 Vorhalle 19", p1: null, p2: null },
+    { id: 13, name: "Simon Schreiner", zone: "C27 Eingangsfoyer 20/21", p1: null, p2: null },
+    { id: 14, name: "Arthur Garner", zone: "C28 Halle 24", p1: null, p2: null },
+    { id: 15, name: "Princess Sarah Tuma", zone: "C29 Halle 25", p1: null, p2: null },
+    { id: 16, name: "Karl Naaßner", zone: "C24 Kleiner Stern", p1: null, p2: null },
+    { id: 17, name: "Darius-Marvin Westerhold", zone: "C32 CityCube West", p1: null, p2: null },
+    { id: 18, name: "Simon Ferber", zone: "C34 Eingang Halle 9", p1: null, p2: null },
+    { id: 19, name: "Aiyana Tressel", zone: "C35 Halle 14.1", p1: null, p2: null },
+    { id: 20, name: "Benjamin Smajic", zone: "C36 CityCube Ost", p1: null, p2: null },
+    { id: 21, name: "Luka Obst", zone: "C30 hub27", p1: null, p2: null },
+    { id: 22, name: "Finn Heyse", zone: "C16 Foyer Halle 5.2a", p1: null, p2: null },
+    { id: 23, name: "Aleksa Belakova", zone: "C39 Halle 26", p1: null, p2: null },
+    { id: 24, name: "Johanna Riesopp", zone: "Messeleitung Marshall-Haus", p1: null, p2: null },
+    { id: 25, name: "Osaze Okodolor", zone: "Messeleitung Marshall-Haus", p1: null, p2: null }
+  ]
 };
 
-var people = [];
-var tempCovers = ["", "", ""];
-var tempPeople = ["", "", "", ""];
+function persist() {
+  try { localStorage.setItem("gm_messe_data_v3", JSON.stringify(appData)); } catch(e){}
+}
+
+var loaded = null;
+try { loaded = JSON.parse(localStorage.getItem("gm_messe_data_v3")); } catch(e){}
+if (loaded && loaded.covers && loaded.covers.length > 0) {
+  appData = loaded;
+}
 
 function toM(str) {
   if (!str) return 0;
@@ -182,168 +213,421 @@ function toTimeStr(mins) {
   return h + ":" + m;
 }
 
-function safeSetStorage(key, val) {
-  try {
-    localStorage.setItem(key, JSON.stringify(val));
-  } catch(e) {
-    console.warn("Storage nicht verfügbar");
-  }
-}
-
-function safeGetStorage(key) {
-  try {
-    var item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : null;
-  } catch(e) {
-    return null;
-  }
-}
-
 function openWizard() {
-  document.getElementById("wz-err-box").style.display = "none";
-  document.getElementById("wz-cover-start").value = config.coverStart || "08:45";
-  document.getElementById("wz-cover-end").value = config.coverEnd || "15:00";
-  
-  if (config.covers && config.covers.length > 0) {
-    tempCovers = config.covers.map(function(c){ return c.name; });
-  } else {
-    tempCovers = ["", "", ""];
-  }
-
-  if (people && people.length > 0) {
-    tempPeople = people.map(function(p){ return p.name; });
-  } else {
-    tempPeople = ["", "", "", ""];
-  }
-
-  renderWizardFields();
+  document.getElementById("wz-zones").value = appData.zones.join(", ");
+  renderWizardCoverRows();
+  renderWizardPersonRows();
   document.getElementById("wizard-modal").style.display = "flex";
 }
 
 function closeWizard() {
-  if (config.covers.length > 0 && people.length > 0) {
-    document.getElementById("wizard-modal").style.display = "none";
-  }
+  document.getElementById("wizard-modal").style.display = "none";
 }
 
-function renderWizardFields() {
-  var cBox = document.getElementById("wz-cover-fields");
-  cBox.innerHTML = "";
-  tempCovers.forEach(function(val, idx) {
+function renderWizardCoverRows() {
+  var box = document.getElementById("wz-cover-fields");
+  box.innerHTML = "";
+  var zones = getCurrentlyEnteredZones();
+
+  appData.covers.forEach(function(c, i) {
     var row = document.createElement("div");
     row.className = "entry-row";
     row.innerHTML = 
-      '<input type="text" placeholder="Cover ' + (idx + 1) + '" value="' + (val || '') + '" ' +
-      'onchange="tempCovers[' + idx + ']=this.value; if(' + idx + '===' + (tempCovers.length - 1) + ' && this.value.trim()){appendEmptyCover();}">' +
-      '<button class="entry-del" type="button" onclick="deleteCover(' + idx + ')">✕</button>';
-    cBox.appendChild(row);
-  });
-
-  var pBox = document.getElementById("wz-people-fields");
-  pBox.innerHTML = "";
-  tempPeople.forEach(function(val, idx) {
-    var row = document.createElement("div");
-    row.className = "entry-row";
-    row.innerHTML = 
-      '<input type="text" placeholder="Mitarbeiter ' + (idx + 1) + '" value="' + (val || '') + '" ' +
-      'onchange="tempPeople[' + idx + ']=this.value; if(' + idx + '===' + (tempPeople.length - 1) + ' && this.value.trim()){appendEmptyPerson();}">' +
-      '<button class="entry-del" type="button" onclick="deletePerson(' + idx + ')">✕</button>';
-    pBox.appendChild(row);
+      '<input type="text" placeholder="Name" value="' + c.name + '" style="flex:2;" id="wz-c-name-' + i + '">' +
+      '<input type="time" value="' + c.start + '" style="flex:1.2;" id="wz-c-start-' + i + '">' +
+      '<input type="time" value="' + c.end + '" style="flex:1.2;" id="wz-c-end-' + i + '">' +
+      '<select style="flex:1.5;" id="wz-c-zone-' + i + '">' +
+        '<option value="Alle" ' + (c.zone === "Alle" ? 'selected' : '') + '>Alle Zonen</option>' +
+        zones.map(function(z){ return '<option value="' + z + '" ' + (c.zone === z ? 'selected' : '') + '>' + z + '</option>'; }).join('') +
+      '</select>' +
+      '<button type="button" style="color:var(--danger); background:transparent; border:none;" onclick="appData.covers.splice(' + i + ',1); renderWizardCoverRows();">✕</button>';
+    box.appendChild(row);
   });
 }
 
-function appendEmptyCover() { tempCovers.push(""); renderWizardFields(); }
-function deleteCover(idx) { tempCovers.splice(idx, 1); if(tempCovers.length===0) tempCovers.push(""); renderWizardFields(); }
+function renderWizardPersonRows() {
+  var box = document.getElementById("wz-people-fields");
+  box.innerHTML = "";
 
-function appendEmptyPerson() { tempPeople.push(""); renderWizardFields(); }
-function deletePerson(idx) { tempPeople.splice(idx, 1); if(tempPeople.length===0) tempPeople.push(""); renderWizardFields(); }
+  appData.people.forEach(function(p, i) {
+    var row = document.createElement("div");
+    row.className = "entry-row";
+    row.innerHTML = 
+      '<input type="text" placeholder="Mitarbeiter Name" value="' + p.name + '" style="flex:2.5;" id="wz-p-name-' + i + '">' +
+      '<input type="text" placeholder="Bereich/Halle" value="' + p.zone + '" style="flex:2;" id="wz-p-zone-' + i + '">' +
+      '<button type="button" style="color:var(--danger); background:transparent; border:none;" onclick="appData.people.splice(' + i + ',1); renderWizardPersonRows();">✕</button>';
+    box.appendChild(row);
+  });
+}
+
+function getCurrentlyEnteredZones() {
+  var raw = document.getElementById("wz-zones").value;
+  return raw.split(",").map(function(s){ return s.trim(); }).filter(Boolean);
+}
+
+function appendCoverRow() {
+  appData.covers.push({ id: Date.now(), tag: "C", name: "", start: "11:15", end: "15:30", zone: "Alle", color: COVER_PALETTE[appData.covers.length % COVER_PALETTE.length] });
+  renderWizardCoverRows();
+}
+
+function appendPersonRow() {
+  appData.people.push({ id: Date.now(), name: "", zone: "Halle", p1: null, p2: null });
+  renderWizardPersonRows();
+}
 
 function saveWizard() {
-  var cInputs = document.querySelectorAll("#wz-cover-fields input");
-  var pInputs = document.querySelectorAll("#wz-people-fields input");
+  appData.zones = getCurrentlyEnteredZones();
 
-  var finalCovers = [];
-  cInputs.forEach(function(input){ if (input.value.trim()) finalCovers.push(input.value.trim()); });
+  var newCovers = [];
+  appData.covers.forEach(function(c, i) {
+    var nameEl = document.getElementById("wz-c-name-" + i);
+    if (nameEl && nameEl.value.trim()) {
+      var parts = nameEl.value.trim().split(" ");
+      var tag = parts.map(function(p){ return p.charAt(0).toUpperCase(); }).join("").slice(0, 2);
+      newCovers.push({
+        id: c.id || (i + 1),
+        tag: tag || "C",
+        name: nameEl.value.trim(),
+        start: document.getElementById("wz-c-start-" + i).value || "11:15",
+        end: document.getElementById("wz-c-end-" + i).value || "15:30",
+        zone: document.getElementById("wz-c-zone-" + i).value,
+        color: COVER_PALETTE[i % COVER_PALETTE.length]
+      });
+    }
+  });
 
-  var finalPeople = [];
-  pInputs.forEach(function(input){ if (input.value.trim()) finalPeople.push(input.value.trim()); });
+  var newPeople = [];
+  appData.people.forEach(function(p, i) {
+    var nameEl = document.getElementById("wz-p-name-" + i);
+    if (nameEl && nameEl.value.trim()) {
+      newPeople.push({
+        id: p.id || (i + 1),
+        name: nameEl.value.trim(),
+        zone: document.getElementById("wz-p-zone-" + i).value.trim() || "Bereich",
+        p1: p.p1 || null,
+        p2: p.p2 || null
+      });
+    }
+  });
 
-  if (finalCovers.length === 0 || finalPeople.length === 0) {
-    document.getElementById("wz-err-box").style.display = "block";
+  if (newCovers.length === 0 || newPeople.length === 0) {
+    alert("Bitte mindestens 1 Cover und 1 Mitarbeiter eintragen!");
     return;
   }
 
-  config.coverStart = document.getElementById("wz-cover-start").value || "08:45";
-  config.coverEnd = document.getElementById("wz-cover-end").value || "15:00";
-
-  config.covers = finalCovers.map(function(name, i) {
-    return {
-      id: i + 1,
-      tag: name.charAt(0).toUpperCase(),
-      name: name,
-      color: COVER_PALETTE[i % COVER_PALETTE.length]
-    };
-  });
-
-  people = finalPeople.map(function(name, i) {
-    return { id: i + 1, name: name, p1: null, p2: null };
-  });
-
-  safeSetStorage("final_pm_cfg", config);
-  safeSetStorage("final_pm_ppl", people);
-
-  document.getElementById("wizard-modal").style.display = "none";
+  appData.covers = newCovers;
+  appData.people = newPeople;
+  persist();
+  closeWizard();
   render();
 }
 
 function clearOnlyBreaks() {
-  people.forEach(function(p){ p.p1 = null; p.p2 = null; });
-  safeSetStorage("final_pm_ppl", people);
+  appData.people.forEach(function(p){ p.p1 = null; p.p2 = null; });
+  persist();
   render();
 }
 
 function autoGenerateBreaks() {
-  var cStart = toM(config.coverStart);
-  var cEnd = toM(config.coverEnd);
-
   var coverBusy = {};
-  config.covers.forEach(function(c){ coverBusy[c.id] = cStart; });
+  appData.covers.forEach(function(c){ coverBusy[c.id] = toM(c.start); });
 
-  people.forEach(function(p) {
-    var earliestCoverId = config.covers[0].id;
-    var minBusy = coverBusy[earliestCoverId];
-    config.covers.forEach(function(c) {
-      if (coverBusy[c.id] < minBusy) {
-        minBusy = coverBusy[c.id];
-        earliestCoverId = c.id;
-      }
+  appData.people.forEach(function(p) {
+    var matchingCovers = appData.covers.filter(function(c){
+      return c.zone === "Alle" || p.zone.includes(c.zone);
     });
 
-    var bStart = minBusy;
-    if (bStart + 60 <= cEnd) {
-      p.p1 = { start: toTimeStr(bStart), dur: 60 };
+    if (matchingCovers.length === 0) matchingCovers = appData.covers;
+
+    matchingCovers.sort(function(a, b){ return coverBusy[a.id] - coverBusy[b.id]; });
+    var chosen = matchingCovers[0];
+
+    var bStart = coverBusy[chosen.id];
+    var cEnd = toM(chosen.end);
+
+    if (bStart + 30 <= cEnd) {
+      p.p1 = { start: toTimeStr(bStart), dur: 30, manualCoverId: null };
       p.p2 = null;
-      coverBusy[earliestCoverId] = bStart + 60;
-    } else if (bStart + 30 <= cEnd) {
-      p.p1 = { start: toTimeStr(bStart), dur: 30 };
-      p.p2 = null;
-      coverBusy[earliestCoverId] = bStart + 30;
+      coverBusy[chosen.id] = bStart + 30;
     }
   });
 
-  safeSetStorage("final_pm_ppl", people);
+  persist();
   render();
 }
 
+function getMinMaxMins() {
+  var starts = appData.covers.map(function(c){ return toM(c.start); });
+  var ends = appData.covers.map(function(c){ return toM(c.end); });
+  var minM = Math.min.apply(null, starts.length ? starts : [450]); // 07:30
+  var maxM = Math.max.apply(null, ends.length ? ends : [1095]); // 18:15
+  var tStart = Math.floor(minM / 60) * 60;
+  var tEnd = Math.ceil(maxM / 60) * 60 + 30;
+  return { start: tStart, end: tEnd, total: tEnd - tStart };
+}
+
 function renderTicks() {
+  var range = getMinMaxMins();
   var el = document.getElementById("head-ticks");
   el.innerHTML = "";
-  var tStart = Math.floor(toM(config.coverStart || "08:45") / 60) * 60;
-  var tEnd = Math.ceil(toM(config.coverEnd || "15:00") / 60) * 60 + 30;
-  var total = tEnd - tStart;
 
-  for (var m = tStart; m <= tEnd; m += 30) {
-    var pct = ((m - tStart) / total) * 100;
+  for (var m = range.start; m <= range.end; m += 30) {
+    var pct = ((m - range.start) / range.total) * 100;
+    var d = document.createElement("div");
+    d.className = "tick-label";
+    d.style.left = pct + "%";
+    d.innerText = toTimeStr(m);
+    el.appendChild(d);
+  }
+}
+
+function updatePlan() {
+  var range = getMinMaxMins();
+  var allBreaks = [];
+
+  appData.people.forEach(function(p) {
+    if (p.p1) {
+      allBreaks.push({ pId: p.id, pName: p.name, zone: p.zone, part: 1, start: toM(p.p1.start), dur: p.p1.dur, end: toM(p.p1.start) + p.p1.dur, manualCoverId: p.p1.manualCoverId });
+    }
+    if (p.p2) {
+      allBreaks.push({ pId: p.id, pName: p.name, zone: p.zone, part: 2, start: toM(p.p2.start), dur: p.p2.dur, end: toM(p.p2.start) + p.p2.dur, manualCoverId: p.p2.manualCoverId });
+    }
+  });
+
+  var minuteUsage = {};
+  for (var m = range.start; m < range.end; m++) minuteUsage[m] = 0;
+
+  allBreaks.forEach(function(b) {
+    for (var t = b.start; t < b.end; t++) {
+      if (minuteUsage[t] !== undefined) minuteUsage[t]++;
+    }
+  });
+
+  var cLayer = document.getElementById("conflict-layer");
+  cLayer.innerHTML = "";
+  var inConflict = false;
+  var confStart = 0;
+
+  for (var m = range.start; m <= range.end; m++) {
+    var availableAtMin = appData.covers.filter(function(c){ return m >= toM(c.start) && m < toM(c.end); }).length;
+    var isOver = (minuteUsage[m] || 0) > availableAtMin;
+
+    if (isOver && !inConflict) {
+      inConflict = true; confStart = m;
+    } else if (!isOver && inConflict) {
+      inConflict = false;
+      var band = document.createElement("div");
+      band.className = "conflict-band";
+      band.style.left = (((confStart - range.start) / range.total) * 100) + "%";
+      band.style.width = (((m - confStart) / range.total) * 100) + "%";
+      cLayer.appendChild(band);
+    }
+  }
+
+  allBreaks.sort(function(a, b) { return a.start - b.start; });
+  var coverBusy = {};
+  var coverWorked = {};
+  appData.covers.forEach(function(c) { coverBusy[c.id] = 0; coverWorked[c.id] = 0; });
+
+  allBreaks.forEach(function(b) {
+    if (b.manualCoverId) {
+      var c = appData.covers.find(function(x){ return x.id == b.manualCoverId; });
+      if (c) {
+        b.assigned = c;
+        b.isManual = true;
+        coverBusy[c.id] = Math.max(coverBusy[c.id], b.end);
+        coverWorked[c.id] += b.dur;
+      }
+    }
+  });
+
+  allBreaks.forEach(function(b) {
+    if (!b.assigned) {
+      var validCovers = appData.covers.filter(function(c) {
+        var inShift = (b.start >= toM(c.start)) && (b.end <= toM(c.end));
+        var isFree = coverBusy[c.id] <= b.start;
+        return inShift && isFree;
+      });
+
+      if (validCovers.length > 0) {
+        validCovers.sort(function(cA, cB) {
+          var matchA = (cA.zone === "Alle" || b.zone.includes(cA.zone)) ? 1 : 0;
+          var matchB = (cB.zone === "Alle" || b.zone.includes(cB.zone)) ? 1 : 0;
+          if (matchA !== matchB) return matchB - matchA;
+          return coverWorked[cA.id] - coverWorked[cB.id];
+        });
+
+        var chosen = validCovers[0];
+        b.assigned = chosen;
+        coverBusy[chosen.id] = b.end;
+        coverWorked[chosen.id] += b.dur;
+      } else {
+        b.assigned = { tag: "?", name: "Kein Cover", color: "#64748b" };
+      }
+    }
+  });
+
+  var leg = document.getElementById("legend-container");
+  leg.innerHTML = "<span style='font-size:0.7rem; color:var(--muted);'>Springer:</span>";
+  appData.covers.forEach(function(c) {
+    leg.innerHTML += "<span class='badge-cov' style='background:" + c.color + "'>" + c.tag + ": " + c.name.split(" ")[0] + " (" + c.start + "-" + c.end + " | " + (coverWorked[c.id] || 0) + "m)</span>";
+  });
+
+  var gWrap = document.getElementById("gantt-rows");
+  gWrap.innerHTML = "";
+
+  appData.people.forEach(function(p) {
+    var row = document.createElement("div");
+    row.className = "chart-row";
+
+    var nCol = document.createElement("div");
+    nCol.className = "col-name";
+    nCol.innerHTML = '<span>' + p.name + '</span><span class="zone-badge" title="' + p.zone + '">' + p.zone + '</span>';
+    row.appendChild(nCol);
+
+    var tCol = document.createElement("div");
+    tCol.className = "col-track";
+
+    var pBreaks = allBreaks.filter(function(b) { return b.pId === p.id; });
+    pBreaks.forEach(function(b) {
+      var bar = document.createElement("div");
+      bar.className = "p-bar " + (b.isManual ? "p-bar-fixed" : "");
+      bar.style.left = Math.max(0, ((b.start - range.start) / range.total) * 100) + "%";
+      bar.style.width = ((b.dur / range.total) * 100) + "%";
+      bar.style.background = b.assigned.color;
+      bar.innerText = b.assigned.tag + " • " + toTimeStr(b.start) + (b.isManual ? " 📌" : "");
+      tCol.appendChild(bar);
+    });
+
+    row.appendChild(tCol);
+    gWrap.appendChild(row);
+  });
+}
+
+function renderEditForm() {
+  var wrap = document.getElementById("people-list");
+  wrap.innerHTML = "";
+
+  appData.people.forEach(function(p) {
+    var card = document.createElement("div");
+    card.className = "person-card";
+
+    var html = '<div class="p-head"><span>' + p.name + ' <small class="zone-badge">' + p.zone + '</small></span></div>';
+
+    if (p.p1) html += renderPauseControl(p, 1);
+    if (p.p2) html += renderPauseControl(p, 2);
+
+    if (!p.p1) {
+      html += '<button class="btn-add" style="margin-top:4px;" onclick="createPause(' + p.id + ', 1)">+ Pause eintragen</button>';
+    } else if (!p.p2 && p.p1.dur === 30) {
+      html += '<button class="btn-add" style="margin-top:4px; background:#475569; color:#fff;" onclick="createPause(' + p.id + ', 2)">+ 2. Pause (30m)</button>';
+    }
+
+    card.innerHTML = html;
+    wrap.appendChild(card);
+  });
+}
+
+function renderPauseControl(p, part) {
+  var pause = (part === 1) ? p.p1 : p.p2;
+  var coverOptions = '<option value="">Auto (Laufwege-Match)</option>' + 
+    appData.covers.map(function(c){
+      var sel = (pause.manualCoverId == c.id) ? "selected" : "";
+      return '<option value="' + c.id + '" ' + sel + '>Fest: ' + c.name + '</option>';
+    }).join('');
+
+  return '' +
+    '<div class="p-controls">' +
+      '<span style="font-size:0.7rem; font-weight:bold; width:22px;">P' + part + ':</span>' +
+      '<input type="time" value="' + pause.start + '" onchange="changeTime(' + p.id + ', ' + part + ', this.value)">' +
+      '<select onchange="changeDur(' + p.id + ', ' + part + ', this.value)">' +
+        '<option value="30" ' + (pause.dur === 30 ? 'selected' : '') + '>30m</option>' +
+        '<option value="60" ' + (pause.dur === 60 ? 'selected' : '') + '>60m</option>' +
+      '</select>' +
+      '<select onchange="setManualCover(' + p.id + ', ' + part + ', this.value)" style="border-color:#38bdf8;">' +
+        coverOptions +
+      '</select>' +
+      '<button class="btn-util" onclick="shift(' + p.id + ', ' + part + ', -15)">-15m</button>' +
+      '<button class="btn-util" onclick="shift(' + p.id + ', ' + part + ', +15)">+15m</button>' +
+      '<button class="btn-del" onclick="delPause(' + p.id + ', ' + part + ')">✕</button>' +
+    '</div>';
+}
+
+function setManualCover(pId, part, covId) {
+  var p = appData.people.find(function(x){ return x.id === pId; });
+  var pause = (part === 1) ? p.p1 : p.p2;
+  if (!pause) return;
+  pause.manualCoverId = covId ? parseInt(covId, 10) : null;
+  persist();
+  render();
+}
+
+function createPause(id, part) {
+  var p = appData.people.find(function(x){ return x.id === id; });
+  if (!p) return;
+  var def = (part === 1) ? "11:30" : "13:30";
+  if (part === 1) p.p1 = { start: def, dur: 30, manualCoverId: null };
+  else p.p2 = { start: def, dur: 30, manualCoverId: null };
+  persist();
+  render();
+}
+
+function delPause(id, part) {
+  var p = appData.people.find(function(x){ return x.id === id; });
+  if (!p) return;
+  if (part === 1) p.p1 = null; else p.p2 = null;
+  persist();
+  render();
+}
+
+function shift(id, part, delta) {
+  var p = appData.people.find(function(x){ return x.id === id; });
+  var pause = (part === 1) ? p.p1 : p.p2;
+  if (!pause) return;
+  var cur = toM(pause.start) + delta;
+  pause.start = toTimeStr(cur);
+  persist();
+  render();
+}
+
+function changeTime(id, part, val) {
+  var p = appData.people.find(function(x){ return x.id === id; });
+  var pause = (part === 1) ? p.p1 : p.p2;
+  if (pause) pause.start = val;
+  persist();
+  render();
+}
+
+function changeDur(id, part, val) {
+  var p = appData.people.find(function(x){ return x.id === id; });
+  if (part === 1 && p.p1) {
+    p.p1.dur = parseInt(val, 10);
+    if (p.p1.dur === 60) p.p2 = null;
+  }
+  persist();
+  render();
+}
+
+function toggleScreenshotMode() {
+  document.body.classList.toggle("screenshot-mode");
+  var btn = document.getElementById("mode-btn");
+  if (document.body.classList.contains("screenshot-mode")) {
+    btn.innerText = "✏️ Bearbeiten";
+  } else {
+    btn.innerText = "📸 Screenshot";
+  }
+}
+
+function render() {
+  renderTicks();
+  updatePlan();
+  renderEditForm();
+}
+
+render();
+</script>
+</body>
+</html>
     var d = document.createElement("div");
     d.className = "tick-label";
     d.style.left = pct + "%";
