@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>InnoTrans – Pausen- & Zonen-Planer</title>
+  <title>InnoTrans – Zonen- & Pausenplaner</title>
   
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -18,6 +18,7 @@
       --muted: #8493a8;
       --primary: #38bdf8;
       --danger: #ef4444;
+      --warning: #f59e0b;
       --conflict-zone: rgba(239, 68, 68, 0.35);
       --conflict-border: #ef4444;
     }
@@ -28,13 +29,12 @@
     h1 { font-size: 1.05rem; color: var(--primary); }
     .action-buttons { display: flex; gap: 6px; }
     .btn-toggle { background: #22c55e; color: #000; font-weight: bold; border: none; padding: 7px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
-    .btn-auto { background: #f59e0b; color: #000; font-weight: bold; border: none; padding: 8px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; width: 100%; margin-bottom: 8px; }
-    .btn-add-p { background: #334155; color: #fff; border: 1px dashed var(--border); padding: 7px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
+    .btn-auto { background: var(--warning); color: #000; font-weight: bold; border: none; padding: 8px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; width: 100%; margin-bottom: 8px; }
 
     .legend-bar { display: flex; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; margin-bottom: 8px; font-size: 0.75rem; flex-wrap: wrap; align-items: center; }
     .badge-cov { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #fff; font-size: 0.7rem; }
-    .zone-badge { font-size: 0.65rem; background: #1e293b; color: #38bdf8; border: 1px solid #334155; padding: 1px 5px; border-radius: 4px; font-weight: bold; }
 
+    /* GANTT CONTAINER */
     .chart-wrapper {
       background: var(--card);
       border: 1px solid var(--border);
@@ -43,9 +43,24 @@
       -webkit-overflow-scrolling: touch;
       position: relative;
     }
-    .chart-inner { min-width: 780px; position: relative; }
+    .chart-inner { min-width: 680px; position: relative; }
+    
     .timeline-head { height: 26px; display: flex; margin-left: 145px; border-bottom: 1px solid var(--border); position: relative; background: #0c1220; }
     .tick-label { position: absolute; transform: translateX(-50%); font-size: 0.65rem; color: var(--muted); font-weight: 600; top: 5px; }
+
+    /* ZONEN GRUPPENKÖPFE */
+    .zone-header-row {
+      background: #172554;
+      color: #93c5fd;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-bottom: 1px solid var(--border);
+      border-top: 1px solid var(--border);
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+    }
 
     .chart-row { display: flex; height: 32px; border-bottom: 1px solid #1a2338; position: relative; align-items: center; }
     .chart-row:nth-child(even) { background: rgba(255,255,255,0.015); }
@@ -54,24 +69,28 @@
 
     .conflict-band { position: absolute; top: 0; bottom: 0; background: var(--conflict-zone); border-left: 1px solid var(--conflict-border); border-right: 1px solid var(--conflict-border); pointer-events: none; z-index: 1; }
 
+    /* PAUSENBALKEN */
     .p-bar {
       position: absolute; top: 3px; height: 26px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; color: #fff;
-      display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 2; overflow: hidden; white-space: nowrap;
+      display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 2; overflow: hidden; white-space: nowrap; cursor: pointer;
     }
     .p-bar-fixed { outline: 2px solid #fff; }
+    .p-bar-buffer-warn { border: 2px dashed #f59e0b !important; }
 
+    /* EDIT CONTAINER UNTEN */
     .edit-container { margin-top: 12px; }
     .person-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; }
     .p-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 600; gap: 4px; }
-    .p-controls { display: flex; gap: 4px; align-items: center; margin-top: 5px; flex-wrap: wrap; background: #0c1220; padding: 4px; border-radius: 4px; }
-    input, select { background: #131b2e; border: 1px solid var(--border); color: #fff; padding: 3px 5px; border-radius: 4px; font-size: 0.75rem; }
-    button.btn-util { background: #23304a; border: 1px solid #334155; color: #fff; padding: 3px 6px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; }
+    select, input { background: #131b2e; border: 1px solid var(--border); color: #fff; padding: 3px 5px; border-radius: 4px; font-size: 0.75rem; }
     button.btn-add { background: #38bdf8; color: #000; font-weight: bold; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; }
-    .btn-del { color: #f87171; background: transparent; border: none; font-size: 0.85rem; margin-left: auto; cursor: pointer; }
 
-    .switch-label { font-size: 0.68rem; color: var(--muted); display: flex; align-items: center; gap: 3px; cursor: pointer; }
+    /* MODAL: SCHNELL-EDIT POPUP BEI KLICK AUF BALKEN */
+    .pop-backdrop { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.85); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 12px; }
+    .pop-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; max-width: 360px; width: 100%; padding: 14px; }
+    .pop-title { font-size: 0.95rem; font-weight: bold; color: var(--primary); margin-bottom: 6px; }
+    .pop-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.8rem; }
 
-    body.screenshot-mode .edit-container, body.screenshot-mode .btn-auto, body.screenshot-mode .btn-add-p { display: none !important; }
+    body.screenshot-mode .edit-container, body.screenshot-mode .btn-auto { display: none !important; }
     body.screenshot-mode .btn-toggle { background: #f59e0b; color: #000; }
     body.screenshot-mode { padding: 4px; }
   </style>
@@ -80,16 +99,15 @@
 
   <div class="top-section">
     <div>
-      <h1>InnoTrans – Pausenplan (16.09.)</h1>
-      <div style="font-size:0.7rem; color:var(--muted);">Flexible Springer & Doppelbesetzungen</div>
+      <h1>InnoTrans – Zonen-Planer</h1>
+      <div style="font-size:0.7rem; color:var(--muted);">Klick auf Balken zum Bearbeiten • Auto-Zoom aktiv</div>
     </div>
     <div class="action-buttons">
-      <button class="btn-add-p" onclick="addNewPerson()">+ Person</button>
       <button class="btn-toggle" id="mode-btn" onclick="toggleScreenshotMode()">📸 Screenshot</button>
     </div>
   </div>
 
-  <button class="btn-auto" onclick="autoGenerateBreaks()">⚡ Pausen automatisch verteilen (inkl. 10m Puffer)</button>
+  <button class="btn-auto" onclick="autoGenerateBreaks()">⚡ Pausen nach Zonen verteilen (inkl. 10m Wegezeit-Puffer)</button>
 
   <div class="legend-bar" id="legend-container"></div>
 
@@ -103,67 +121,106 @@
 
   <div class="edit-container" id="edit-area">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-      <span style="font-size:0.75rem; color:var(--muted); font-weight:bold;">Team & Stationen (Doppelbesetzung frei als Springer schaltbar):</span>
-      <button onclick="clearOnlyBreaks()" style="background:transparent; border:none; color:#f87171; font-size:0.75rem; cursor:pointer;">Pausen leeren (Neuer Tag)</button>
+      <span style="font-size:0.75rem; color:var(--muted); font-weight:bold;">Mitarbeiterliste & Zonen:</span>
+      <button onclick="clearOnlyBreaks()" style="background:transparent; border:none; color:#f87171; font-size:0.75rem; cursor:pointer;">Alle Pausen leeren</button>
     </div>
     <div id="people-list"></div>
   </div>
 
-<script>
-var COVER_PALETTE = ["#f59e0b", "#0284c7", "#9333ea", "#ea580c", "#10b981", "#ec4899", "#8b5cf6", "#14b8a6", "#64748b", "#3b82f6"];
+  <!-- POPUP FÜR DIREKTES BEARBEITEN DES BALKENS -->
+  <div class="pop-backdrop" id="bar-modal" style="display:none;" onclick="closeBarModal(event)">
+    <div class="pop-box" onclick="event.stopPropagation()">
+      <div class="pop-title" id="pop-name">Pause anpassen</div>
+      <div style="font-size:0.75rem; color:var(--muted); margin-bottom:12px;" id="pop-station">Station</div>
 
-// Saubere Datenbasis exakt nach Bild 2 (16.09.)
+      <div class="pop-row">
+        <span>Pausenspringer:</span>
+        <select id="pop-cover" style="width:160px; font-weight:bold; border-color:var(--primary);"></select>
+      </div>
+
+      <div class="pop-row">
+        <span>Startzeit:</span>
+        <div style="display:flex; gap:4px; align-items:center;">
+          <button type="button" style="background:#23304a; border:1px solid #334155; color:#fff; padding:4px 8px; border-radius:4px;" onclick="popShift(-15)">-15m</button>
+          <input type="time" id="pop-start" style="padding:4px;">
+          <button type="button" style="background:#23304a; border:1px solid #334155; color:#fff; padding:4px 8px; border-radius:4px;" onclick="popShift(15)">+15m</button>
+        </div>
+      </div>
+
+      <div class="pop-row">
+        <span>Dauer:</span>
+        <select id="pop-dur">
+          <option value="30">30 Min</option>
+          <option value="45">45 Min</option>
+          <option value="60">60 Min</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:6px; margin-top:14px;">
+        <button type="button" style="flex:1; background:var(--primary); color:#000; font-weight:bold; border:none; padding:8px; border-radius:4px;" onclick="saveBarModal()">Übernehmen</button>
+        <button type="button" style="background:transparent; color:var(--danger); border:1px solid var(--danger); padding:8px; border-radius:4px;" onclick="deleteCurrentBar()">Löschen</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+var COVER_PALETTE = ["#f59e0b", "#0284c7", "#9333ea", "#ea580c", "#10b981", "#ec4899", "#64748b"];
+
+// Zonen-Definition für saubere Messe-Gruppierung
+var ZONES = ["Nord (Halle 1-4)", "Süd (Halle 5-8)", "Ost (Halle 14-26)", "CityCube & Hub27", "Marshall-Haus (Selbstversorger)"];
+
 var appData = {
-  // Feste dedizierte Springer + Joris (Runner)
   covers: [
-    { id: 101, tag: "HA", name: "Hassan Ali Akram", start: "07:30", end: "15:30", color: "#f59e0b" },
-    { id: 102, tag: "HR", name: "Henri Reininger", start: "11:15", end: "15:30", color: "#0284c7" },
-    { id: 103, tag: "CW", name: "Cairo Würdig", start: "11:15", end: "15:30", color: "#9333ea" },
-    { id: 104, tag: "OB", name: "Oluwafemi J. Brown", start: "11:15", end: "15:30", color: "#ea580c" },
-    { id: 105, tag: "AE", name: "Ayse M. Ejder", start: "11:15", end: "15:30", color: "#10b981" },
-    { id: 106, tag: "SH", name: "Samim Honardoust", start: "11:15", end: "15:30", color: "#ec4899" },
-    { id: 107, tag: "JM", name: "Joris Mahnke (Runner)", start: "07:30", end: "18:15", color: "#64748b" }
+    { id: 101, tag: "HA", name: "Hassan Ali Akram", start: "07:30", end: "15:30", zone: "Nord (Halle 1-4)", color: "#f59e0b" },
+    { id: 102, tag: "HR", name: "Henri Reininger", start: "11:15", end: "15:30", zone: "Nord (Halle 1-4)", color: "#0284c7" },
+    { id: 103, tag: "CW", name: "Cairo Würdig", start: "11:15", end: "15:30", zone: "Süd (Halle 5-8)", color: "#9333ea" },
+    { id: 104, tag: "OB", name: "Oluwafemi J. Brown", start: "11:15", end: "15:30", zone: "Ost (Halle 14-26)", color: "#ea580c" },
+    { id: 105, tag: "AE", name: "Ayse M. Ejder", start: "11:15", end: "15:30", zone: "CityCube & Hub27", color: "#10b981" },
+    { id: 106, tag: "SH", name: "Samim Honardoust", start: "11:15", end: "15:30", zone: "Ost (Halle 14-26)", color: "#ec4899" },
+    { id: 107, tag: "JM", name: "Joris Mahnke (Runner)", start: "07:30", end: "18:15", zone: "Alle", color: "#64748b" }
   ],
-  // Alle 25 Posten / Hostessen
   people: [
-    { id: 1, name: "Baran Cakmak", desc: "C31 Halle 1.1a/2.1a", isCover: false, p1: null, p2: null },
-    { id: 2, name: "Gian Danke", desc: "C03 Halle 3.1/4.1a", isCover: false, p1: null, p2: null },
-    { id: 3, name: "Tolga Sencan", desc: "C07 Halle 7.1b Foyer", isCover: false, p1: null, p2: null },
-    { id: 4, name: "Caroline Jansen", desc: "C09 Großer Stern (Doppel)", isCover: false, p1: null, p2: null },
-    { id: 5, name: "Franklin K. Ju Asante", desc: "C10 Kleiner Stern", isCover: false, p1: null, p2: null },
-    { id: 6, name: "Lynn Magali Wende", desc: "C12 Halle 1.2a/2.2a", isCover: false, p1: null, p2: null },
-    { id: 7, name: "Felix Spohr", desc: "C14 Halle 3.2a/4.2a", isCover: false, p1: null, p2: null },
-    { id: 8, name: "Mavie Borch", desc: "C18 Halle 5.2b/6.2b", isCover: false, p1: null, p2: null },
-    { id: 9, name: "Inti Emilio Wackwitz", desc: "C19 Halle 7/7.2a", isCover: false, p1: null, p2: null },
-    { id: 10, name: "Ognyana Samardzhieva", desc: "C22 Halle 7.2c/8.2", isCover: false, p1: null, p2: null },
-    { id: 11, name: "Melisa Korkmaz", desc: "C23 Großer Stern", isCover: false, p1: null, p2: null },
-    { id: 12, name: "Anna Ribbeck", desc: "C25 Vorhalle 19", isCover: false, p1: null, p2: null },
-    { id: 13, name: "Simon Schreiner", desc: "C27 Eingangsfoyer 20/21", isCover: false, p1: null, p2: null },
-    { id: 14, name: "Arthur Garner", desc: "C28 Halle 24", isCover: false, p1: null, p2: null },
-    { id: 15, name: "Princess Sarah Tuma", desc: "C29 Halle 25", isCover: false, p1: null, p2: null },
-    { id: 16, name: "Karl Naaßner", desc: "C24 Kleiner Stern", isCover: false, p1: null, p2: null },
-    { id: 17, name: "Darius-Marvin Westerhold", desc: "C32 CityCube West", isCover: false, p1: null, p2: null },
-    { id: 18, name: "Simon Ferber", desc: "C34 Eingang Halle 9", isCover: false, p1: null, p2: null },
-    { id: 19, name: "Aiyana Tressel", desc: "C35 Halle 14.1", isCover: false, p1: null, p2: null },
-    { id: 20, name: "Benjamin Smajic", desc: "C36 CityCube Ost", isCover: false, p1: null, p2: null },
-    { id: 21, name: "Luka Obst", desc: "C38 Hub27", isCover: false, p1: null, p2: null },
-    { id: 22, name: "Finn Heyse", desc: "C16 Foyer Halle 5.2a", isCover: false, p1: null, p2: null },
-    { id: 23, name: "Aleksa Belakova", desc: "C39 Halle 26", isCover: false, p1: null, p2: null },
-    { id: 24, name: "Johanna Riesopp", desc: "Marshall-Haus", isCover: false, p1: null, p2: null },
-    { id: 25, name: "Martina Errickson", desc: "Marshall-Haus (Doppel)", isCover: false, p1: null, p2: null },
-    { id: 26, name: "Osaze Okodolor", desc: "Marshall-Haus", isCover: false, p1: null, p2: null }
+    // NORD
+    { id: 1, name: "Baran Cakmak", desc: "C31 Halle 1.1a/2.1a", zone: "Nord (Halle 1-4)", p: null },
+    { id: 2, name: "Gian Danke", desc: "C03 Halle 3.1/4.1a", zone: "Nord (Halle 1-4)", p: null },
+    { id: 3, name: "Tolga Sencan", desc: "C07 Halle 7.1b Foyer", zone: "Nord (Halle 1-4)", p: null },
+    { id: 4, name: "Caroline Jansen", desc: "C09 Großer Stern (Doppel)", zone: "Nord (Halle 1-4)", p: null },
+    { id: 5, name: "Franklin K. Ju Asante", desc: "C10 Kleiner Stern", zone: "Nord (Halle 1-4)", p: null },
+    { id: 6, name: "Lynn Magali Wende", desc: "C12 Halle 1.2a/2.2a", zone: "Nord (Halle 1-4)", p: null },
+    { id: 7, name: "Felix Spohr", desc: "C14 Halle 3.2a/4.2a", zone: "Nord (Halle 1-4)", p: null },
+    // SÜD
+    { id: 8, name: "Mavie Borch", desc: "C18 Halle 5.2b/6.2b", zone: "Süd (Halle 5-8)", p: null },
+    { id: 9, name: "Inti Emilio Wackwitz", desc: "C19 Halle 7/7.2a", zone: "Süd (Halle 5-8)", p: null },
+    { id: 10, name: "Ognyana Samardzhieva", desc: "C22 Halle 7.2c/8.2", zone: "Süd (Halle 5-8)", p: null },
+    { id: 11, name: "Melisa Korkmaz", desc: "C23 Großer Stern", zone: "Süd (Halle 5-8)", p: null },
+    { id: 12, name: "Anna Ribbeck", desc: "C25 Vorhalle 19", zone: "Süd (Halle 5-8)", p: null },
+    { id: 13, name: "Simon Schreiner", desc: "C27 Eingangsfoyer 20/21", zone: "Süd (Halle 5-8)", p: null },
+    { id: 22, name: "Finn Heyse", desc: "C16 Foyer Halle 5.2a", zone: "Süd (Halle 5-8)", p: null },
+    // OST
+    { id: 14, name: "Arthur Garner", desc: "C28 Halle 24", zone: "Ost (Halle 14-26)", p: null },
+    { id: 15, name: "Princess Sarah Tuma", desc: "C29 Halle 25", zone: "Ost (Halle 14-26)", p: null },
+    { id: 16, name: "Karl Naaßner", desc: "C24 Kleiner Stern", zone: "Ost (Halle 14-26)", p: null },
+    { id: 18, name: "Simon Ferber", desc: "C34 Eingang Halle 9", zone: "Ost (Halle 14-26)", p: null },
+    { id: 19, name: "Aiyana Tressel", desc: "C35 Halle 14.1", zone: "Ost (Halle 14-26)", p: null },
+    { id: 23, name: "Aleksa Belakova", desc: "C39 Halle 26", zone: "Ost (Halle 14-26)", p: null },
+    // CITYCUBE
+    { id: 17, name: "Darius-Marvin Westerhold", desc: "C32 CityCube West", zone: "CityCube & Hub27", p: null },
+    { id: 20, name: "Benjamin Smajic", desc: "C36 CityCube Ost", zone: "CityCube & Hub27", p: null },
+    { id: 21, name: "Luka Obst", desc: "C38 Hub27", zone: "CityCube & Hub27", p: null },
+    // MARSHALL HAUS
+    { id: 24, name: "Johanna Riesopp", desc: "Marshall-Haus (Selbstversorger)", zone: "Marshall-Haus (Selbstversorger)", p: null },
+    { id: 25, name: "Martina Errickson", desc: "Marshall-Haus (Selbstversorger)", zone: "Marshall-Haus (Selbstversorger)", p: null },
+    { id: 26, name: "Osaze Okodolor", desc: "Marshall-Haus (Selbstversorger)", zone: "Marshall-Haus (Selbstversorger)", p: null }
   ]
 };
 
 function persist() {
-  try { localStorage.setItem("innotrans_fix_v2", JSON.stringify(appData)); } catch(e){}
+  try { localStorage.setItem("innotrans_zones_v3", JSON.stringify(appData)); } catch(e){}
 }
 
 var loaded = null;
-try { loaded = JSON.parse(localStorage.getItem("innotrans_fix_v2")); } catch(e){}
-if (loaded && loaded.covers && loaded.covers.length > 0) {
-  appData = loaded;
-}
+try { loaded = JSON.parse(localStorage.getItem("innotrans_zones_v3")); } catch(e){}
+if (loaded && loaded.covers && loaded.covers.length > 0) appData = loaded;
 
 function toM(str) {
   if (!str) return 0;
@@ -177,102 +234,36 @@ function toTimeStr(mins) {
   return h + ":" + m;
 }
 
-// Gibt alle aktiven Springer zurück (dedizierte + per Checkbox aktivierte Mitarbeiter)
-function getAllActiveCovers() {
-  var list = appData.covers.slice();
+// AUTO-ZOOM: Dynamische Zeitleiste berechnen (schneidet leere Randzeiten ab)
+function getAutoZoomRange() {
+  var activeStarts = [];
+  var activeEnds = [];
+
+  appData.covers.forEach(function(c) {
+    activeStarts.push(toM(c.start));
+    activeEnds.push(toM(c.end));
+  });
+
+  // Falls Pausen außerhalb der Springerzeiten liegen, mitnehmen
   appData.people.forEach(function(p) {
-    if (p.isCover) {
-      var parts = p.name.trim().split(" ");
-      var tag = parts.map(function(s){ return s.charAt(0).toUpperCase(); }).join("").slice(0, 2);
-      list.push({
-        id: p.id,
-        tag: tag || "S",
-        name: p.name + " (Station)",
-        start: "11:15",
-        end: "18:00",
-        color: "#3b82f6"
-      });
-    }
-  });
-  return list;
-}
-
-function toggleIsCover(pId, isChecked) {
-  var p = appData.people.find(function(x){ return x.id === pId; });
-  if (!p) return;
-  p.isCover = isChecked;
-  // Wenn Person zum Springer wird, eigene Pausen entfernen
-  if (isChecked) { p.p1 = null; p.p2 = null; }
-  persist();
-  render();
-}
-
-function addNewPerson() {
-  var name = prompt("Name der neuen Person:");
-  if (name && name.trim()) {
-    var desc = prompt("Bereich/Station:", "Messe");
-    appData.people.push({
-      id: Date.now(),
-      name: name.trim(),
-      desc: desc ? desc.trim() : "Messe",
-      isCover: false,
-      p1: null,
-      p2: null
-    });
-    persist();
-    render();
-  }
-}
-
-function clearOnlyBreaks() {
-  appData.people.forEach(function(p){ p.p1 = null; p.p2 = null; });
-  persist();
-  render();
-}
-
-function autoGenerateBreaks() {
-  var activeCovers = getAllActiveCovers().filter(function(c){ return c.id !== 107; }); // Runner Joris nicht automatisch vollplanen
-  var BUFFER_MINS = 10;
-  var coverBusy = {};
-  activeCovers.forEach(function(c){ coverBusy[c.id] = toM(c.start); });
-
-  // Nur Personen einplanen, die nicht selbst Springer sind und keine Doppelbesetzungs-Ausnahme haben
-  var needBreaks = appData.people.filter(function(p){ return !p.isCover; });
-
-  needBreaks.forEach(function(p) {
-    activeCovers.sort(function(a, b){ return coverBusy[a.id] - coverBusy[b.id]; });
-    var chosen = activeCovers[0];
-    var bStart = coverBusy[chosen.id];
-    var cEnd = toM(chosen.end);
-
-    if (bStart + 45 <= cEnd) {
-      p.p1 = { start: toTimeStr(bStart), dur: 45, manualCoverId: chosen.id };
-      p.p2 = null;
-      coverBusy[chosen.id] = bStart + 45 + BUFFER_MINS;
-    } else if (bStart + 30 <= cEnd) {
-      p.p1 = { start: toTimeStr(bStart), dur: 30, manualCoverId: chosen.id };
-      p.p2 = null;
-      coverBusy[chosen.id] = bStart + 30 + BUFFER_MINS;
+    if (p.p) {
+      var s = toM(p.p.start);
+      activeStarts.push(s);
+      activeEnds.push(s + p.p.dur);
     }
   });
 
-  persist();
-  render();
-}
+  var minM = Math.min.apply(null, activeStarts.length ? activeStarts : [675]);
+  var maxM = Math.max.apply(null, activeEnds.length ? activeEnds : [930]);
 
-function getMinMaxMins() {
-  var activeCovers = getAllActiveCovers();
-  var starts = activeCovers.map(function(c){ return toM(c.start); });
-  var ends = activeCovers.map(function(c){ return toM(c.end); });
-  var minM = Math.min.apply(null, starts.length ? starts : [450]);
-  var maxM = Math.max.apply(null, ends.length ? ends : [1095]);
-  var tStart = Math.floor(minM / 60) * 60;
-  var tEnd = Math.ceil(maxM / 60) * 60 + 30;
+  // Auf nächste halbe Stunde runden
+  var tStart = Math.max(450, Math.floor(minM / 30) * 30); // frühestens 07:30
+  var tEnd = Math.min(1080, Math.ceil(maxM / 30) * 30 + 30); // Puffer nach hinten
   return { start: tStart, end: tEnd, total: tEnd - tStart };
 }
 
 function renderTicks() {
-  var range = getMinMaxMins();
+  var range = getAutoZoomRange();
   var el = document.getElementById("head-ticks");
   el.innerHTML = "";
 
@@ -286,110 +277,149 @@ function renderTicks() {
   }
 }
 
+// AUTO-DISTRIBUTION NACH ZONEN
+function autoGenerateBreaks() {
+  var BUFFER_MINS = 10;
+  var coverBusyUntil = {};
+  appData.covers.forEach(function(c){ coverBusyUntil[c.id] = toM(c.start); });
+
+  // Marshall-Haus hat keinen Springerbedarf
+  var candidates = appData.people.filter(function(p){ 
+    return !p.zone.includes("Marshall-Haus"); 
+  });
+
+  candidates.forEach(function(p) {
+    // Passenden Springer für diese Zone finden
+    var matching = appData.covers.filter(function(c) {
+      if (c.id === 107) return false; // Runner Joris nicht vollplanen
+      return c.zone === p.zone || c.zone === "Alle";
+    });
+
+    if (matching.length === 0) matching = appData.covers.filter(function(c){ return c.id !== 107; });
+    matching.sort(function(a, b){ return coverBusyUntil[a.id] - coverBusyUntil[b.id]; });
+
+    var chosen = matching[0];
+    var bStart = coverBusyUntil[chosen.id];
+    var cEnd = toM(chosen.end);
+
+    if (bStart + 45 <= cEnd) {
+      p.p = { start: toTimeStr(bStart), dur: 45, coverId: chosen.id };
+      coverBusyUntil[chosen.id] = bStart + 45 + BUFFER_MINS;
+    } else if (bStart + 30 <= cEnd) {
+      p.p = { start: toTimeStr(bStart), dur: 30, coverId: chosen.id };
+      coverBusyUntil[chosen.id] = bStart + 30 + BUFFER_MINS;
+    }
+  });
+
+  persist();
+  render();
+}
+
+function clearOnlyBreaks() {
+  appData.people.forEach(function(p){ p.p = null; });
+  persist();
+  render();
+}
+
+// GANTT RENDERN INKL. ZONEN-KÖPFEN & WEGEZEIT-CHECK
 function updatePlan() {
-  var range = getMinMaxMins();
-  var activeCovers = getAllActiveCovers();
+  var range = getAutoZoomRange();
   var allBreaks = [];
 
   appData.people.forEach(function(p) {
-    if (!p.isCover) {
-      if (p.p1) allBreaks.push({ pId: p.id, pName: p.name, desc: p.desc, part: 1, start: toM(p.p1.start), dur: p.p1.dur, end: toM(p.p1.start) + p.p1.dur, manualCoverId: p.p1.manualCoverId });
-      if (p.p2) allBreaks.push({ pId: p.id, pName: p.name, desc: p.desc, part: 2, start: toM(p.p2.start), dur: p.p2.dur, end: toM(p.p2.start) + p.p2.dur, manualCoverId: p.p2.manualCoverId });
-    }
-  });
-
-  // Konflikte
-  var minuteUsage = {};
-  for (var m = range.start; m < range.end; m++) minuteUsage[m] = 0;
-  allBreaks.forEach(function(b) {
-    for (var t = b.start; t < b.end; t++) { if (minuteUsage[t] !== undefined) minuteUsage[t]++; }
-  });
-
-  var cLayer = document.getElementById("conflict-layer");
-  cLayer.innerHTML = "";
-  var inConflict = false, confStart = 0;
-
-  for (var m = range.start; m <= range.end; m++) {
-    var available = activeCovers.filter(function(c){ return m >= toM(c.start) && m < toM(c.end); }).length;
-    var isOver = (minuteUsage[m] || 0) > available;
-    if (isOver && !inConflict) { inConflict = true; confStart = m; }
-    else if (!isOver && inConflict) {
-      inConflict = false;
-      var band = document.createElement("div");
-      band.className = "conflict-band";
-      band.style.left = (((confStart - range.start) / range.total) * 100) + "%";
-      band.style.width = (((m - confStart) / range.total) * 100) + "%";
-      cLayer.appendChild(band);
-    }
-  }
-
-  // Zuweisung
-  allBreaks.sort(function(a, b) { return a.start - b.start; });
-  var coverWorked = {};
-  activeCovers.forEach(function(c) { coverWorked[c.id] = 0; });
-
-  allBreaks.forEach(function(b) {
-    var assigned = null;
-    if (b.manualCoverId) {
-      assigned = activeCovers.find(function(x){ return x.id == b.manualCoverId; });
-      if (assigned) b.isManual = true;
-    }
-    if (!assigned) {
-      assigned = activeCovers.find(function(c) {
-        return (b.start >= toM(c.start)) && (b.end <= toM(c.end));
+    if (p.p) {
+      allBreaks.push({
+        pId: p.id,
+        pName: p.name,
+        desc: p.desc,
+        zone: p.zone,
+        start: toM(p.p.start),
+        dur: p.p.dur,
+        end: toM(p.p.start) + p.p.dur,
+        coverId: p.p.coverId
       });
     }
-    b.assigned = assigned || { tag: "?", name: "Kein Cover", color: "#64748b" };
-    if (assigned) coverWorked[assigned.id] += b.dur;
+  });
+
+  // Springer Auslastung & 10m Wegezeit-Prüfung
+  allBreaks.sort(function(a, b){ return a.start - b.start; });
+  var coverLastEnd = {};
+  var coverWorked = {};
+  appData.covers.forEach(function(c){ coverWorked[c.id] = 0; coverLastEnd[c.id] = 0; });
+
+  allBreaks.forEach(function(b) {
+    var cov = appData.covers.find(function(c){ return c.id == b.coverId; });
+    b.assigned = cov || { tag: "?", name: "Kein Cover", color: "#64748b" };
+
+    if (cov) {
+      coverWorked[cov.id] += b.dur;
+      // Hat dieser Springer weniger als 10m Puffer zum letzten Einsatz?
+      if (coverLastEnd[cov.id] > 0 && (b.start - coverLastEnd[cov.id] < 10) && (b.start >= coverLastEnd[cov.id])) {
+        b.bufferWarn = true;
+      }
+      coverLastEnd[cov.id] = b.end;
+    }
   });
 
   // Legende
   var leg = document.getElementById("legend-container");
   leg.innerHTML = "<span style='font-size:0.7rem; color:var(--muted);'>Springer:</span>";
-  activeCovers.forEach(function(c) {
+  appData.covers.forEach(function(c) {
     leg.innerHTML += "<span class='badge-cov' style='background:" + c.color + "'>" + c.tag + ": " + c.name.split(" ")[0] + " (" + (coverWorked[c.id] || 0) + "m)</span>";
   });
 
-  // Gantt Zeilen
+  // Gantt nach Zonen sortiert rendern
   var gWrap = document.getElementById("gantt-rows");
   gWrap.innerHTML = "";
 
-  appData.people.forEach(function(p) {
-    var row = document.createElement("div");
-    row.className = "chart-row";
+  ZONES.forEach(function(zoneName) {
+    var zonePeople = appData.people.filter(function(p){ return p.zone === zoneName; });
+    if (zonePeople.length === 0) return;
 
-    var nCol = document.createElement("div");
-    nCol.className = "col-name";
-    nCol.innerHTML = '<span>' + p.name + '</span><span class="zone-badge" title="' + (p.desc || '') + '">' + (p.desc || '') + (p.isCover ? ' 🚀 SPRINGER' : '') + '</span>';
-    row.appendChild(nCol);
+    // Zonen Header Zeile
+    var zHead = document.createElement("div");
+    zHead.className = "zone-header-row";
+    zHead.innerHTML = "<span>📍 " + zoneName + "</span><span>" + zonePeople.length + " Posten</span>";
+    gWrap.appendChild(zHead);
 
-    var tCol = document.createElement("div");
-    tCol.className = "col-track";
+    zonePeople.forEach(function(p) {
+      var row = document.createElement("div");
+      row.className = "chart-row";
 
-    if (!p.isCover) {
-      var pBreaks = allBreaks.filter(function(b) { return b.pId === p.id; });
-      pBreaks.forEach(function(b) {
+      var nCol = document.createElement("div");
+      nCol.className = "col-name";
+      nCol.innerHTML = '<span>' + p.name + '</span><span style="font-size:0.62rem; color:var(--muted);">' + p.desc + '</span>';
+      row.appendChild(nCol);
+
+      var tCol = document.createElement("div");
+      tCol.className = "col-track";
+
+      var b = allBreaks.find(function(x){ return x.pId === p.id; });
+      if (b) {
         var bar = document.createElement("div");
-        bar.className = "p-bar " + (b.isManual ? "p-bar-fixed" : "");
+        bar.className = "p-bar " + (b.bufferWarn ? "p-bar-buffer-warn" : "");
         bar.style.left = Math.max(0, ((b.start - range.start) / range.total) * 100) + "%";
         bar.style.width = ((b.dur / range.total) * 100) + "%";
         bar.style.background = b.assigned.color;
-        bar.innerText = b.assigned.tag + " • " + toTimeStr(b.start) + (b.isManual ? " 📌" : "");
+        bar.innerText = b.assigned.tag + " • " + toTimeStr(b.start) + (b.bufferWarn ? " ⚡" : "");
+        
+        // KLICK AUF BALKEN ÖFFNET DIREKT DAS SCHNELL-MENÜ
+        bar.onclick = function(ev) {
+          ev.stopPropagation();
+          openBarModal(p.id);
+        };
         tCol.appendChild(bar);
-      });
-    } else {
-      tCol.innerHTML = "<span style='font-size:0.65rem; color:var(--primary); padding-left:10px;'>Aktiv als Pausenspringer</span>";
-    }
+      }
 
-    row.appendChild(tCol);
-    gWrap.appendChild(row);
+      row.appendChild(tCol);
+      gWrap.appendChild(row);
+    });
   });
 }
 
 function renderEditForm() {
   var wrap = document.getElementById("people-list");
   wrap.innerHTML = "";
-  var activeCovers = getAllActiveCovers();
 
   appData.people.forEach(function(p) {
     var card = document.createElement("div");
@@ -398,24 +428,23 @@ function renderEditForm() {
     var html = 
       '<div class="p-head">' +
         '<div>' +
-          '<span>' + p.name + '</span> ' +
-          '<small style="color:var(--muted); font-size:0.7rem;">(' + (p.desc || '') + ')</small>' +
+          '<b>' + p.name + '</b> ' +
+          '<small style="color:var(--muted);">(' + p.desc + ')</small>' +
         '</div>' +
-        '<label class="switch-label">' +
-          '<input type="checkbox" ' + (p.isCover ? 'checked' : '') + ' onchange="toggleIsCover(' + p.id + ', this.checked)">' +
-          'Als Springer nutzen' +
-        '</label>' +
+        '<select onchange="changePersonZone(' + p.id + ', this.value)" style="border-color:var(--primary);">' +
+          ZONES.map(function(z){ return '<option value="' + z + '" ' + (p.zone === z ? 'selected' : '') + '>' + z + '</option>'; }).join('') +
+        '</select>' +
       '</div>';
 
-    if (!p.isCover) {
-      if (p.p1) html += renderPauseControl(p, 1, activeCovers);
-      if (p.p2) html += renderPauseControl(p, 2, activeCovers);
-
-      if (!p.p1) {
-        html += '<button class="btn-add" style="margin-top:4px;" onclick="createPause(' + p.id + ', 1)">+ Pause vergeben</button>';
-      } else if (!p.p2 && p.p1.dur === 30) {
-        html += '<button class="btn-add" style="margin-top:4px; background:#475569; color:#fff;" onclick="createPause(' + p.id + ', 2)">+ 2. Pause (30m)</button>';
-      }
+    if (!p.p) {
+      html += '<button class="btn-add" style="margin-top:4px;" onclick="openBarModal(' + p.id + ')">+ Pause anlegen</button>';
+    } else {
+      var cov = appData.covers.find(function(c){ return c.id == p.p.coverId; });
+      html += 
+        '<div style="font-size:0.75rem; margin-top:4px; display:flex; justify-content:space-between; align-items:center;">' +
+          '<span>Eingeteilt: <b>' + p.p.start + ' Uhr</b> (' + p.p.dur + 'm) durch <b>' + (cov ? cov.name : 'Kein Springer') + '</b></span>' +
+          '<button class="btn-add" style="background:#334155; color:#fff;" onclick="openBarModal(' + p.id + ')">Bearbeiten</button>' +
+        '</div>';
     }
 
     card.innerHTML = html;
@@ -423,84 +452,66 @@ function renderEditForm() {
   });
 }
 
-function renderPauseControl(p, part, activeCovers) {
-  var pause = (part === 1) ? p.p1 : p.p2;
-  var coverOptions = activeCovers.map(function(c){
-    var sel = (pause.manualCoverId == c.id) ? "selected" : "";
-    return '<option value="' + c.id + '" ' + sel + '>' + c.name + '</option>';
-  }).join('');
-
-  return '' +
-    '<div class="p-controls">' +
-      '<span style="font-size:0.7rem; font-weight:bold; width:22px;">P' + part + ':</span>' +
-      '<input type="time" value="' + pause.start + '" onchange="changeTime(' + p.id + ', ' + part + ', this.value)">' +
-      '<select onchange="changeDur(' + p.id + ', ' + part + ', this.value)">' +
-        '<option value="30" ' + (pause.dur === 30 ? 'selected' : '') + '>30m</option>' +
-        '<option value="45" ' + (pause.dur === 45 ? 'selected' : '') + '>45m</option>' +
-        '<option value="60" ' + (pause.dur === 60 ? 'selected' : '') + '>60m</option>' +
-      '</select>' +
-      '<select onchange="setManualCover(' + p.id + ', ' + part + ', this.value)" style="border-color:#38bdf8; font-weight:bold;">' +
-        '<option value="">Auto-Springer</option>' +
-        coverOptions +
-      '</select>' +
-      '<button class="btn-util" onclick="shift(' + p.id + ', ' + part + ', -15)">-15m</button>' +
-      '<button class="btn-util" onclick="shift(' + p.id + ', ' + part + ', +15)">+15m</button>' +
-      '<button class="btn-del" onclick="delPause(' + p.id + ', ' + part + ')">✕</button>' +
-    '</div>';
-}
-
-function setManualCover(pId, part, covId) {
+function changePersonZone(pId, newZone) {
   var p = appData.people.find(function(x){ return x.id === pId; });
-  var pause = (part === 1) ? p.p1 : p.p2;
-  if (!pause) return;
-  pause.manualCoverId = covId ? parseInt(covId, 10) : null;
-  persist();
-  render();
+  if (p) { p.zone = newZone; persist(); render(); }
 }
 
-function createPause(id, part) {
-  var p = appData.people.find(function(x){ return x.id === id; });
+/* MODAL / SCHNELL-EDIT BEI KLICK AUF BALKEN */
+var activeModalPersonId = null;
+
+function openBarModal(pId) {
+  activeModalPersonId = pId;
+  var p = appData.people.find(function(x){ return x.id === pId; });
   if (!p) return;
-  var def = (part === 1) ? "11:30" : "13:30";
-  if (part === 1) p.p1 = { start: def, dur: 45, manualCoverId: null };
-  else p.p2 = { start: def, dur: 30, manualCoverId: null };
-  persist();
-  render();
+
+  document.getElementById("pop-name").innerText = p.name;
+  document.getElementById("pop-station").innerText = p.desc + " (" + p.zone + ")";
+
+  // Springer Dropdown befüllen
+  var cSel = document.getElementById("pop-cover");
+  cSel.innerHTML = '<option value="">Kein Springer</option>' + 
+    appData.covers.map(function(c){
+      var isSel = (p.p && p.p.coverId == c.id) ? "selected" : "";
+      return '<option value="' + c.id + '" ' + isSel + '>' + c.name + '</option>';
+    }).join('');
+
+  document.getElementById("pop-start").value = p.p ? p.p.start : "11:30";
+  document.getElementById("pop-dur").value = p.p ? p.p.dur : "45";
+
+  document.getElementById("bar-modal").style.display = "flex";
 }
 
-function delPause(id, part) {
-  var p = appData.people.find(function(x){ return x.id === id; });
+function closeBarModal(ev) {
+  document.getElementById("bar-modal").style.display = "none";
+}
+
+function popShift(delta) {
+  var el = document.getElementById("pop-start");
+  var cur = toM(el.value) + delta;
+  el.value = toTimeStr(cur);
+}
+
+function saveBarModal() {
+  var p = appData.people.find(function(x){ return x.id === activeModalPersonId; });
   if (!p) return;
-  if (part === 1) p.p1 = null; else p.p2 = null;
+
+  var covId = document.getElementById("pop-cover").value;
+  p.p = {
+    start: document.getElementById("pop-start").value,
+    dur: parseInt(document.getElementById("pop-dur").value, 10),
+    coverId: covId ? parseInt(covId, 10) : null
+  };
+
   persist();
+  document.getElementById("bar-modal").style.display = "none";
   render();
 }
 
-function shift(id, part, delta) {
-  var p = appData.people.find(function(x){ return x.id === id; });
-  var pause = (part === 1) ? p.p1 : p.p2;
-  if (!pause) return;
-  var cur = toM(pause.start) + delta;
-  pause.start = toTimeStr(cur);
-  persist();
-  render();
-}
-
-function changeTime(id, part, val) {
-  var p = appData.people.find(function(x){ return x.id === id; });
-  var pause = (part === 1) ? p.p1 : p.p2;
-  if (pause) pause.start = val;
-  persist();
-  render();
-}
-
-function changeDur(id, part, val) {
-  var p = appData.people.find(function(x){ return x.id === id; });
-  if (part === 1 && p.p1) {
-    p.p1.dur = parseInt(val, 10);
-    if (p.p1.dur >= 45) p.p2 = null;
-  }
-  persist();
+function deleteCurrentBar() {
+  var p = appData.people.find(function(x){ return x.id === activeModalPersonId; });
+  if (p) { p.p = null; persist(); }
+  document.getElementById("bar-modal").style.display = "none";
   render();
 }
 
