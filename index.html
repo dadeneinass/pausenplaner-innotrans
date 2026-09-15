@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>InnoTrans 2026 – Pausen- & Zonen-Planer</title>
   
-  <!-- html2canvas für den direkten PNG-Download -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
@@ -33,7 +32,6 @@
     .legend-bar { display: flex; gap: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-size: 0.78rem; flex-wrap: wrap; align-items: center; }
     .badge-cov { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: #fff; }
 
-    /* ZEITLEISTE */
     #capture-area { background: var(--bg); padding: 4px; border-radius: 8px; }
     .gantt-container { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
     .timeline-head { height: 30px; display: flex; margin-left: 260px; border-bottom: 1px solid var(--border); position: relative; background: #080d1a; }
@@ -49,7 +47,6 @@
     
     .row-track { flex: 1; height: 100%; position: relative; }
 
-    /* BALKEN MIT DESKTOP DRAG & DROP */
     .bar {
       position: absolute; top: 4px; height: 30px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; color: #fff;
       display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.5); z-index: 2;
@@ -63,19 +60,16 @@
       to { box-shadow: 0 0 12px #f87171; }
     }
 
-    /* FORMULAR */
-    .table-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-    th { text-align: left; padding: 8px; color: var(--muted); border-bottom: 1px solid var(--border); }
-    td { padding: 8px; border-bottom: 1px solid #1a2744; }
-    select, input[type="time"] { background: #0c1424; border: 1px solid var(--border); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
-    
-    /* MODAL */
+    /* KARTEN-BEARBEITUNG UNTEN */
+    .edit-container { margin-top: 16px; }
+    .person-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+    select, input[type="text"] { background: #0c1424; border: 1px solid var(--border); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.78rem; }
+    .btn-edit { background: #243354; color: #fff; border: 1px solid var(--border); padding: 5px 10px; }
+
     .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 999; }
     .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; width: 420px; padding: 16px; }
 
-    /* SCREENSHOT MODUS */
-    body.screenshot-mode .table-card, 
+    body.screenshot-mode .edit-container, 
     body.screenshot-mode .btn-auto, 
     body.screenshot-mode .btn-reset { display: none !important; }
     body.screenshot-mode .btn-shot { background: #f59e0b; color: #000; }
@@ -86,7 +80,7 @@
   <div class="top-bar">
     <div>
       <h1>InnoTrans 2026 – Pausen- & Zonen-Planung</h1>
-      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">Planung vor Start leer • Auto-Zuteilung auf Knopfdruck • PNG-Export aktiv</div>
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">Reale Messe-Zonen • Drag & Drop aktiv • Automatischer Screenshot-Download</div>
     </div>
     <div class="btn-group">
       <button class="btn-auto" onclick="autoDistribute()">⚡ Pausen nach Zonen verteilen</button>
@@ -103,24 +97,12 @@
     </div>
   </div>
 
-  <div class="table-card">
-    <h3 style="font-size:0.9rem; color:var(--primary); margin-bottom:8px;">Stationen & Zonen-Zuweisung</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Station / Position</th>
-          <th>Zone</th>
-          <th>Pausenzeit</th>
-          <th>Pausenspringer</th>
-          <th>Aktion</th>
-        </tr>
-      </thead>
-      <tbody id="table-body"></tbody>
-    </table>
+  <div class="edit-container">
+    <h3 style="font-size:0.9rem; color:var(--primary); margin-bottom:8px;">Team- & Zonen-Übersicht</h3>
+    <div id="people-list"></div>
   </div>
 
-  <!-- MODAL: BALKEN BEARBEITEN -->
+  <!-- MODAL: BALKEN ANPASSEN -->
   <div class="modal" id="edit-modal" style="display:none;" onclick="closeModal()">
     <div class="modal-box" onclick="event.stopPropagation()">
       <h3 style="color:var(--primary); margin-bottom:10px;" id="m-title">Pause anpassen</h3>
@@ -164,26 +146,25 @@ var appData = {
     { id: 106, name: "Samim Honardoust", start: "11:15", end: "15:30", color: "#ec4899" },
     { id: 107, name: "Joris Mahnke (Runner)", start: "07:30", end: "18:15", color: "#64748b" }
   ],
-  // Standard-Zustand: Zonen sind vordefiniert, p ist standardmäßig null (leer)
   people: [
     // PAKET 1 (Henri)
     { id: 17, name: "Darius-Marvin Westerhold", desc: "C32 CityCube West (Ebene 1)", zone: "Paket 1: CityCube & Halle 7 Süd (Henri)", p: null },
     { id: 20, name: "Benjamin Smajic", desc: "C36 CityCube Ost (Zwischenebene)", zone: "Paket 1: CityCube & Halle 7 Süd (Henri)", p: null },
-    { id: 9, name: "Inti Emilio Wackwitz", desc: "C19 Halle 7.2a (Ebene 2)", zone: "Paket 1: CityCube & Halle 7 Süd (Henri)", p: null },
+    { id: 9,  name: "Inti Emilio Wackwitz", desc: "C19 Halle 7.2a (Ebene 2)", zone: "Paket 1: CityCube & Halle 7 Süd (Henri)", p: null },
 
     // PAKET 2 (Cairo)
-    { id: 1, name: "Baran Cakmak", desc: "C31 Halle 1.1a/2.1a (Ebene 1)", zone: "Paket 2: Spange 1–4 West (Cairo)", p: null },
-    { id: 6, name: "Lynn Magali Wende", desc: "C12 Halle 1.2a/2.2a (Ebene 2)", zone: "Paket 2: Spange 1–4 West (Cairo)", p: null },
-    { id: 7, name: "Felix Spohr", desc: "C14 Halle 3.2a/4.2a (Ebene 2)", zone: "Paket 2: Spange 1–4 West (Cairo)", p: null },
+    { id: 1,  name: "Baran Cakmak", desc: "C31 Halle 1.1a/2.1a (Ebene 1)", zone: "Paket 2: Spange 1–4 West (Cairo)", p: null },
+    { id: 6,  name: "Lynn Magali Wende", desc: "C12 Halle 1.2a/2.2a (Ebene 2)", zone: "Paket 2: Spange 1–4 West (Cairo)", p: null },
+    { id: 7,  name: "Felix Spohr", desc: "C14 Halle 3.2a/4.2a (Ebene 2)", zone: "Paket 2: Spange 1–4 West (Cairo)", p: null },
 
     // PAKET 3 (Joel)
-    { id: 2, name: "Gian Danke", desc: "C03 Halle 3.1/4.1a (Ebene 1)", zone: "Paket 3: Spange 3–7 Mitte (Joel)", p: null },
-    { id: 3, name: "Tolga Sencan", desc: "C07 Halle 7.1b Foyer (Ebene 1)", zone: "Paket 3: Spange 3–7 Mitte (Joel)", p: null },
+    { id: 2,  name: "Gian Danke", desc: "C03 Halle 3.1/4.1a (Ebene 1)", zone: "Paket 3: Spange 3–7 Mitte (Joel)", p: null },
+    { id: 3,  name: "Tolga Sencan", desc: "C07 Halle 7.1b Foyer (Ebene 1)", zone: "Paket 3: Spange 3–7 Mitte (Joel)", p: null },
     { id: 10, name: "Ognyana Samardzhieva", desc: "C22 Halle 7.2c/8.2 (Ebene 2)", zone: "Paket 3: Spange 3–7 Mitte (Joel)", p: null },
 
     // PAKET 4 (Ayse)
     { id: 22, name: "Finn Heyse", desc: "C16 Kopffoyer Halle 5.2a (Ebene 2)", zone: "Paket 4: Halle 5/6 & Foyer 24 (Ayse)", p: null },
-    { id: 8, name: "Mavie Borch", desc: "C18 Halle 5.2b/6.2b (Ebene 2)", zone: "Paket 4: Halle 5/6 & Foyer 24 (Ayse)", p: null },
+    { id: 8,  name: "Mavie Borch", desc: "C18 Halle 5.2b/6.2b (Ebene 2)", zone: "Paket 4: Halle 5/6 & Foyer 24 (Ayse)", p: null },
     { id: 14, name: "Arthur Garner", desc: "C28 Halle 24 (Ebene 2)", zone: "Paket 4: Halle 5/6 & Foyer 24 (Ayse)", p: null },
 
     // PAKET 5 (Samim)
@@ -191,8 +172,8 @@ var appData = {
     { id: 15, name: "Princess Sarah Tuma", desc: "C29 Halle 25 (Ebene 2)", zone: "Paket 5: hub27 & Halle 25/26 (Samim)", p: null },
     { id: 23, name: "Aleksa Belakova", desc: "C39 Halle 26 West (Ebene 2)", zone: "Paket 5: hub27 & Halle 25/26 (Samim)", p: null },
 
-    // PAKET 6 (Hassan)
-    { id: 5, name: "Franklin K. Ju Asante", desc: "C10 Kleiner Stern (Ebene 1)", zone: "Paket 6: Sterne & Ost-Eingang (Hassan)", p: null },
+    // PAKET 6 (Hassan - 4 Stationen ab 10:30)
+    { id: 5,  name: "Franklin K. Ju Asante", desc: "C10 Kleiner Stern (Ebene 1)", zone: "Paket 6: Sterne & Ost-Eingang (Hassan)", p: null },
     { id: 11, name: "Melisa Korkmaz", desc: "C23 Großer Stern (Ebene 2)", zone: "Paket 6: Sterne & Ost-Eingang (Hassan)", p: null },
     { id: 16, name: "Karl Naaßner", desc: "C24 Kleiner Stern (Ebene 2)", zone: "Paket 6: Sterne & Ost-Eingang (Hassan)", p: null },
     { id: 19, name: "Aiyana Tressel", desc: "C35 Halle 14.1 (Eingang Ost)", zone: "Paket 6: Sterne & Ost-Eingang (Hassan)", p: null },
@@ -203,7 +184,7 @@ var appData = {
     { id: 13, name: "Simon Schreiner", desc: "C27 Trompete 20/21 (Ebene 2)", zone: "Paket 7: Ausreißer & Weite Posten (Joris Runner)", p: null },
 
     // SELBSTVERSORGER
-    { id: 4, name: "Caroline Jansen", desc: "C09 Großer Stern (Doppel)", zone: "Marshall-Haus & Großer Stern (Selbstversorger)", p: null },
+    { id: 4,  name: "Caroline Jansen", desc: "C09 Großer Stern (Doppel)", zone: "Marshall-Haus & Großer Stern (Selbstversorger)", p: null },
     { id: 25, name: "Martina Errickson", desc: "C09 Großer Stern (Doppel)", zone: "Marshall-Haus & Großer Stern (Selbstversorger)", p: null },
     { id: 24, name: "Johanna Riesopp", desc: "Marshall-Haus", zone: "Marshall-Haus & Großer Stern (Selbstversorger)", p: null },
     { id: 26, name: "Osaze Okodolor", desc: "Marshall-Haus", zone: "Marshall-Haus & Großer Stern (Selbstversorger)", p: null }
@@ -211,11 +192,11 @@ var appData = {
 };
 
 function persist() {
-  try { localStorage.setItem("innotrans_exact_plan_v12", JSON.stringify(appData)); } catch(e){}
+  try { localStorage.setItem("innotrans_stable_v14", JSON.stringify(appData)); } catch(e){}
 }
 
 var loaded = null;
-try { loaded = JSON.parse(localStorage.getItem("innotrans_exact_plan_v12")); } catch(e){}
+try { loaded = JSON.parse(localStorage.getItem("innotrans_stable_v14")); } catch(e){}
 if (loaded && loaded.covers && loaded.covers.length > 0) appData = loaded;
 
 function toM(str) {
@@ -247,46 +228,40 @@ function renderTicks() {
   }
 }
 
-// AUTO-DISTRIBUTE: Teilt die exakt besprochenen Zonen-Pakete auf Knopfdruck ein
 function autoDistribute() {
   var assignments = {
-    // Paket 1 (Henri)
     17: { start: "11:15", dur: 60, cover: "Henri Reininger" },
     20: { start: "12:25", dur: 60, cover: "Henri Reininger" },
     9:  { start: "13:35", dur: 60, cover: "Henri Reininger" },
-    // Paket 2 (Cairo)
+
     1:  { start: "11:15", dur: 60, cover: "Cairo Würdig" },
     6:  { start: "12:25", dur: 60, cover: "Cairo Würdig" },
     7:  { start: "13:35", dur: 60, cover: "Cairo Würdig" },
-    // Paket 3 (Joel)
+
     2:  { start: "11:15", dur: 60, cover: "Oluwafemi J. Brown" },
     3:  { start: "12:25", dur: 60, cover: "Oluwafemi J. Brown" },
     10: { start: "13:35", dur: 60, cover: "Oluwafemi J. Brown" },
-    // Paket 4 (Ayse)
+
     22: { start: "11:15", dur: 60, cover: "Ayse M. Ejder" },
     8:  { start: "12:25", dur: 60, cover: "Ayse M. Ejder" },
     14: { start: "13:35", dur: 60, cover: "Ayse M. Ejder" },
-    // Paket 5 (Samim)
+
     21: { start: "11:15", dur: 60, cover: "Samim Honardoust" },
     15: { start: "12:25", dur: 60, cover: "Samim Honardoust" },
     23: { start: "13:35", dur: 60, cover: "Samim Honardoust" },
-    // Paket 6 (Hassan)
+
     5:  { start: "10:30", dur: 60, cover: "Hassan Ali Akram" },
     11: { start: "11:40", dur: 60, cover: "Hassan Ali Akram" },
     16: { start: "12:50", dur: 60, cover: "Hassan Ali Akram" },
     19: { start: "14:00", dur: 60, cover: "Hassan Ali Akram" },
-    // Paket 7 (Joris Runner)
+
     18: { start: "11:30", dur: 60, cover: "Joris Mahnke (Runner)" },
     12: { start: "12:40", dur: 60, cover: "Joris Mahnke (Runner)" },
     13: { start: "13:50", dur: 60, cover: "Joris Mahnke (Runner)" }
   };
 
   appData.people.forEach(function(p) {
-    if (assignments[p.id]) {
-      p.p = assignments[p.id];
-    } else {
-      p.p = null; // Selbstversorger
-    }
+    p.p = assignments[p.id] ? assignments[p.id] : null;
   });
 
   persist();
@@ -294,37 +269,27 @@ function autoDistribute() {
 }
 
 function clearBreaks() {
-  if (confirm("Möchtest du wirklich alle Pausenzeiten leeren?")) {
+  if (confirm("Wirklich alle Pausen leeren?")) {
     appData.people.forEach(function(p){ p.p = null; });
     persist();
     render();
   }
 }
 
-// SCREENSHOT & AUTOMATISCHER PNG-DOWNLOAD
 function captureAndDownload() {
   var area = document.getElementById("capture-area");
   var btn = document.getElementById("shot-btn");
+  btn.innerText = "⏳ Bild wird erstellt...";
 
-  btn.innerText = "⏳ Generiere Bild...";
-
-  html2canvas(area, {
-    backgroundColor: "#0b1120",
-    scale: 2 // Hohe Auflösung
-  }).then(function(canvas) {
+  html2canvas(area, { backgroundColor: "#0b1120", scale: 2 }).then(function(canvas) {
     var link = document.createElement("a");
     link.download = "InnoTrans_Pausenplan_2026.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
 
     document.body.classList.toggle("screenshot-mode");
-    if (document.body.classList.contains("screenshot-mode")) {
-      btn.innerText = "✏️ Bearbeitungs-Ansicht";
-    } else {
-      btn.innerText = "📸 Screenshot & Download";
-    }
+    btn.innerText = document.body.classList.contains("screenshot-mode") ? "✏️ Bearbeitungs-Modus" : "📸 Screenshot & Download";
   }).catch(function(err) {
-    console.error(err);
     alert("Fehler beim Erstellen des Screenshots.");
     btn.innerText = "📸 Screenshot & Download";
   });
@@ -350,7 +315,6 @@ function render() {
     }
   });
 
-  // Doppelbelegungen prüfen
   var conflictPIds = new Set();
   for (var i = 0; i < allBreaks.length; i++) {
     for (var j = i + 1; j < allBreaks.length; j++) {
@@ -365,18 +329,16 @@ function render() {
     }
   }
 
-  // Legende berechnen
   var covMinutes = {};
   allBreaks.forEach(function(b){ covMinutes[b.cover] = (covMinutes[b.cover] || 0) + b.dur; });
 
   var leg = document.getElementById("legend-box");
-  leg.innerHTML = "<span style='color:var(--muted); font-weight:bold;'>Springer Auslastung:</span>";
+  leg.innerHTML = "<span style='color:var(--muted); font-weight:bold;'>Springer:</span>";
   appData.covers.forEach(function(c) {
     var m = covMinutes[c.name] || 0;
     leg.innerHTML += "<span class='badge-cov' style='background:" + c.color + "'>" + c.name.split(" ")[0] + " (" + m + "m)</span>";
   });
 
-  // GANTT RENDERN
   var gBody = document.getElementById("gantt-body");
   gBody.innerHTML = "";
 
@@ -412,7 +374,7 @@ function render() {
         bar.style.left = Math.max(0, ((b.start - T_START) / T_TOTAL) * 100) + "%";
         bar.style.width = ((b.dur / T_TOTAL) * 100) + "%";
         bar.style.background = color;
-        bar.innerText = (isConflict ? "⚠️ DOPPELBELEGUNG: " : "") + b.cover.split(" ")[0] + " • " + toTimeStr(b.start);
+        bar.innerText = (isConflict ? "⚠️ " : "") + b.cover.split(" ")[0] + " • " + toTimeStr(b.start);
 
         initDesktopDrag(bar, p.id, track);
 
@@ -428,7 +390,7 @@ function render() {
     });
   });
 
-  renderTable();
+  renderEditCards();
 }
 
 function initDesktopDrag(barEl, personId, trackEl) {
@@ -473,29 +435,31 @@ function initDesktopDrag(barEl, personId, trackEl) {
   };
 }
 
-function renderTable() {
-  var tb = document.getElementById("table-body");
-  tb.innerHTML = "";
+function renderEditCards() {
+  var box = document.getElementById("people-list");
+  box.innerHTML = "";
 
   appData.people.forEach(function(p) {
-    var tr = document.createElement("tr");
+    var card = document.createElement("div");
+    card.className = "person-card";
 
-    var zoneSelect = '<select onchange="updatePersonZone(' + p.id + ', this.value)">' +
+    var zoneSelect = '<select onchange="updatePersonZone(' + p.id + ', this.value)" style="margin-right:8px;">' +
       ZONES.map(function(z){ return '<option value="' + z + '" ' + (p.zone === z ? 'selected' : '') + '>' + z + '</option>'; }).join('') +
       '</select>';
 
-    var pTime = p.p ? p.p.start + ' (' + p.p.dur + 'm)' : '<span style="color:var(--muted);">Keine Pause</span>';
-    var pCover = p.p ? '<b>' + p.p.cover + '</b>' : '-';
+    var info = p.p ? ('<b>' + p.p.start + ' Uhr</b> (' + p.p.dur + 'm) • ' + p.p.cover) : '<span style="color:var(--muted);">Keine Pause</span>';
 
-    tr.innerHTML = 
-      '<td><b>' + p.name + '</b></td>' +
-      '<td>' + p.desc + '</td>' +
-      '<td>' + zoneSelect + '</td>' +
-      '<td>' + pTime + '</td>' +
-      '<td>' + pCover + '</td>' +
-      '<td><button style="background:#243354; color:#fff;" onclick="openModal(' + p.id + ')">Bearbeiten</button></td>';
+    card.innerHTML = 
+      '<div>' +
+        '<b>' + p.name + '</b> <span style="color:var(--muted); font-size:0.75rem;">(' + p.desc + ')</span>' +
+      '</div>' +
+      '<div style="display:flex; align-items:center;">' +
+        zoneSelect +
+        '<span style="font-size:0.75rem; min-width:180px;">' + info + '</span>' +
+        '<button class="btn-edit" onclick="openModal(' + p.id + ')">Ändern</button>' +
+      '</div>';
 
-    tb.appendChild(tr);
+    box.appendChild(card);
   });
 }
 
