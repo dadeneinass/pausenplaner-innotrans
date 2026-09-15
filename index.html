@@ -27,6 +27,7 @@
     button { cursor: pointer; border-radius: 6px; font-weight: 600; font-size: 0.8rem; padding: 7px 12px; border: none; }
     .btn-auto { background: var(--warning); color: #000; }
     .btn-shot { background: #22c55e; color: #000; font-weight: bold; }
+    .btn-util { background: #334155; color: #fff; border: 1px solid var(--border); }
     .btn-reset { background: #334155; color: #fca5a5; border: 1px solid var(--border); }
 
     .legend-bar { display: flex; gap: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-size: 0.78rem; flex-wrap: wrap; align-items: center; }
@@ -60,17 +61,18 @@
       to { box-shadow: 0 0 12px #f87171; }
     }
 
-    /* KARTEN-BEARBEITUNG UNTEN */
     .edit-container { margin-top: 16px; }
     .person-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
-    select, input[type="text"] { background: #0c1424; border: 1px solid var(--border); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.78rem; }
+    select, input[type="text"], input[type="time"] { background: #0c1424; border: 1px solid var(--border); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.78rem; }
     .btn-edit { background: #243354; color: #fff; border: 1px solid var(--border); padding: 5px 10px; }
 
     .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 999; }
-    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; width: 420px; padding: 16px; }
+    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; width: 440px; max-height: 90vh; overflow-y: auto; padding: 16px; }
+    .modal-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 6px; }
 
     body.screenshot-mode .edit-container, 
     body.screenshot-mode .btn-auto, 
+    body.screenshot-mode .btn-util,
     body.screenshot-mode .btn-reset { display: none !important; }
     body.screenshot-mode .btn-shot { background: #f59e0b; color: #000; }
   </style>
@@ -80,9 +82,11 @@
   <div class="top-bar">
     <div>
       <h1>InnoTrans 2026 – Pausen- & Zonen-Planung</h1>
-      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">Reale Messe-Zonen • Drag & Drop aktiv • Automatischer Screenshot-Download</div>
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">5-Minuten-Raster • Minutengenaue Anpassung • Exportfertig</div>
     </div>
     <div class="btn-group">
+      <button class="btn-util" onclick="openCoversModal()">⏱️ Springer-Zeiten & Namen</button>
+      <button class="btn-util" onclick="openTeamModal()">👥 Team bearbeiten</button>
       <button class="btn-auto" onclick="autoDistribute()">⚡ Pausen nach Zonen verteilen</button>
       <button class="btn-shot" id="shot-btn" onclick="captureAndDownload()">📸 Screenshot & Download</button>
       <button class="btn-reset" onclick="clearBreaks()">Pausen leeren</button>
@@ -102,19 +106,33 @@
     <div id="people-list"></div>
   </div>
 
-  <!-- MODAL: BALKEN ANPASSEN -->
+  <!-- MODAL: BALKEN BEARBEITEN (MINUTENGENAU) -->
   <div class="modal" id="edit-modal" style="display:none;" onclick="closeModal()">
     <div class="modal-box" onclick="event.stopPropagation()">
       <h3 style="color:var(--primary); margin-bottom:10px;" id="m-title">Pause anpassen</h3>
       
+      <div style="margin-bottom:12px;">
+        <label style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Pausenzeit (Start):</label>
+        <input type="time" id="m-start" style="width:100%; font-size:0.9rem; font-weight:bold;">
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Dauer (Minuten):</label>
+        <select id="m-dur" style="width:100%;">
+          <option value="30">30 Min</option>
+          <option value="45">45 Min</option>
+          <option value="60">60 Min</option>
+        </select>
+      </div>
+
       <div style="margin-bottom:12px;">
         <label style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Pausenspringer:</label>
         <select id="m-cover" style="width:100%;"></select>
       </div>
 
       <div style="margin-bottom:12px;">
-        <label style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Freier Name (Aushilfe / Runner):</label>
-        <input type="text" id="m-custom" placeholder="z. B. Joris (Runner)..." style="width:100%; background:#0c1424; border:1px solid var(--border); color:#fff; padding:5px; border-radius:4px;">
+        <label style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Oder freier Name (Aushilfe / Runner):</label>
+        <input type="text" id="m-custom" placeholder="z. B. Joris (Runner)..." style="width:100%;">
       </div>
 
       <div style="display:flex; justify-content:space-between; gap:6px; margin-top:16px;">
@@ -124,15 +142,39 @@
     </div>
   </div>
 
+  <!-- MODAL: SPRINGER-ZEITEN & NAMEN -->
+  <div class="modal" id="covers-modal" style="display:none;" onclick="closeCoversModal()">
+    <div class="modal-box" onclick="event.stopPropagation()" style="width:500px;">
+      <h3 style="color:var(--primary); margin-bottom:10px;">⏱️ Springer-Zeiten & Namen</h3>
+      <div id="covers-list-box"></div>
+      <div style="margin-top:14px; text-align:right;">
+        <button style="background:var(--primary); color:#000;" onclick="saveCoversModal()">Speichern & Schließen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TEAMMITGLIEDER BEARBEITEN -->
+  <div class="modal" id="team-modal" style="display:none;" onclick="closeTeamModal()">
+    <div class="modal-box" onclick="event.stopPropagation()" style="width:540px;">
+      <h3 style="color:var(--primary); margin-bottom:6px;">👥 Team & Posten bearbeiten</h3>
+      <p style="font-size:0.75rem; color:var(--muted); margin-bottom:12px;">Namen oder Positionen anpassen.</p>
+      <div id="team-edit-box"></div>
+      <button style="background:#243354; color:#fff; width:100%; margin-top:8px;" onclick="addTeamMember()">+ Neue Person hinzufügen</button>
+      <div style="margin-top:14px; text-align:right;">
+        <button style="background:var(--primary); color:#000;" onclick="saveTeamModal()">Speichern & Schließen</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 var ZONES = [
-  "Paket 1: CityCube & Halle 7 Süd (Henri)",
-  "Paket 2: Spange 1–4 West (Cairo)",
-  "Paket 3: Spange 3–7 Mitte (Joel)",
-  "Paket 4: Halle 5/6 & Foyer 24 (Ayse)",
-  "Paket 5: hub27 & Halle 25/26 (Samim)",
-  "Paket 6: Sterne & Ost-Eingang (Hassan)",
-  "Paket 7: Ausreißer & Weite Posten (Joris Runner)",
+  "Zone 1: CityCube & Halle 7 Süd (Henri)",
+  "Zone 2: Spange 1–4 West (Cairo)",
+  "Zone 3: Spange 3–7 Mitte (Joel)",
+  "Zone 4: Halle 5/6 & Foyer 24 (Ayse)",
+  "Zone 5: hub27 & Halle 25/26 (Samim)",
+  "Zone 6: Sterne & Ost-Eingang (Hassan)",
+  "Zone 7: Ausreißer & Weite Posten (Joris Runner)",
   "Marshall-Haus & Großer Stern (Selbstversorger)"
 ];
 
@@ -147,41 +189,41 @@ var appData = {
     { id: 107, name: "Joris Mahnke (Runner)", start: "07:30", end: "18:15", color: "#64748b" }
   ],
   people: [
-    // PAKET 1 (Henri)
-    { id: 17, name: "Darius-Marvin Westerhold", desc: "C32 CityCube West (Ebene 1)", zone: "Paket 1: CityCube & Halle 7 Süd (Henri)", p: null },
-    { id: 20, name: "Benjamin Smajic", desc: "C36 CityCube Ost (Zwischenebene)", zone: "Paket 1: CityCube & Halle 7 Süd (Henri)", p: null },
-    { id: 9,  name: "Inti Emilio Wackwitz", desc: "C19 Halle 7.2a (Ebene 2)", zone: "Paket 1: CityCube & Halle 7 Süd (Henri)", p: null },
+    // ZONE 1 (Henri)
+    { id: 17, name: "Darius-Marvin Westerhold", desc: "C32 CityCube West (Ebene 1)", zone: "Zone 1: CityCube & Halle 7 Süd (Henri)", p: null },
+    { id: 20, name: "Benjamin Smajic", desc: "C36 CityCube Ost (Zwischenebene)", zone: "Zone 1: CityCube & Halle 7 Süd (Henri)", p: null },
+    { id: 9,  name: "Inti Emilio Wackwitz", desc: "C19 Halle 7.2a (Ebene 2)", zone: "Zone 1: CityCube & Halle 7 Süd (Henri)", p: null },
 
-    // PAKET 2 (Cairo)
-    { id: 1,  name: "Baran Cakmak", desc: "C31 Halle 1.1a/2.1a (Ebene 1)", zone: "Paket 2: Spange 1–4 West (Cairo)", p: null },
-    { id: 6,  name: "Lynn Magali Wende", desc: "C12 Halle 1.2a/2.2a (Ebene 2)", zone: "Paket 2: Spange 1–4 West (Cairo)", p: null },
-    { id: 7,  name: "Felix Spohr", desc: "C14 Halle 3.2a/4.2a (Ebene 2)", zone: "Paket 2: Spange 1–4 West (Cairo)", p: null },
+    // ZONE 2 (Cairo)
+    { id: 1,  name: "Baran Cakmak", desc: "C31 Halle 1.1a/2.1a (Ebene 1)", zone: "Zone 2: Spange 1–4 West (Cairo)", p: null },
+    { id: 6,  name: "Lynn Magali Wende", desc: "C12 Halle 1.2a/2.2a (Ebene 2)", zone: "Zone 2: Spange 1–4 West (Cairo)", p: null },
+    { id: 7,  name: "Felix Spohr", desc: "C14 Halle 3.2a/4.2a (Ebene 2)", zone: "Zone 2: Spange 1–4 West (Cairo)", p: null },
 
-    // PAKET 3 (Joel)
-    { id: 2,  name: "Gian Danke", desc: "C03 Halle 3.1/4.1a (Ebene 1)", zone: "Paket 3: Spange 3–7 Mitte (Joel)", p: null },
-    { id: 3,  name: "Tolga Sencan", desc: "C07 Halle 7.1b Foyer (Ebene 1)", zone: "Paket 3: Spange 3–7 Mitte (Joel)", p: null },
-    { id: 10, name: "Ognyana Samardzhieva", desc: "C22 Halle 7.2c/8.2 (Ebene 2)", zone: "Paket 3: Spange 3–7 Mitte (Joel)", p: null },
+    // ZONE 3 (Joel)
+    { id: 2,  name: "Gian Danke", desc: "C03 Halle 3.1/4.1a (Ebene 1)", zone: "Zone 3: Spange 3–7 Mitte (Joel)", p: null },
+    { id: 3,  name: "Tolga Sencan", desc: "C07 Halle 7.1b Foyer (Ebene 1)", zone: "Zone 3: Spange 3–7 Mitte (Joel)", p: null },
+    { id: 10, name: "Ognyana Samardzhieva", desc: "C22 Halle 7.2c/8.2 (Ebene 2)", zone: "Zone 3: Spange 3–7 Mitte (Joel)", p: null },
 
-    // PAKET 4 (Ayse)
-    { id: 22, name: "Finn Heyse", desc: "C16 Kopffoyer Halle 5.2a (Ebene 2)", zone: "Paket 4: Halle 5/6 & Foyer 24 (Ayse)", p: null },
-    { id: 8,  name: "Mavie Borch", desc: "C18 Halle 5.2b/6.2b (Ebene 2)", zone: "Paket 4: Halle 5/6 & Foyer 24 (Ayse)", p: null },
-    { id: 14, name: "Arthur Garner", desc: "C28 Halle 24 (Ebene 2)", zone: "Paket 4: Halle 5/6 & Foyer 24 (Ayse)", p: null },
+    // ZONE 4 (Ayse)
+    { id: 22, name: "Finn Heyse", desc: "C16 Kopffoyer Halle 5.2a (Ebene 2)", zone: "Zone 4: Halle 5/6 & Foyer 24 (Ayse)", p: null },
+    { id: 8,  name: "Mavie Borch", desc: "C18 Halle 5.2b/6.2b (Ebene 2)", zone: "Zone 4: Halle 5/6 & Foyer 24 (Ayse)", p: null },
+    { id: 14, name: "Arthur Garner", desc: "C28 Halle 24 (Ebene 2)", zone: "Zone 4: Halle 5/6 & Foyer 24 (Ayse)", p: null },
 
-    // PAKET 5 (Samim)
-    { id: 21, name: "Luka Obst", desc: "C38 Hub27 (Ebene 2)", zone: "Paket 5: hub27 & Halle 25/26 (Samim)", p: null },
-    { id: 15, name: "Princess Sarah Tuma", desc: "C29 Halle 25 (Ebene 2)", zone: "Paket 5: hub27 & Halle 25/26 (Samim)", p: null },
-    { id: 23, name: "Aleksa Belakova", desc: "C39 Halle 26 West (Ebene 2)", zone: "Paket 5: hub27 & Halle 25/26 (Samim)", p: null },
+    // ZONE 5 (Samim)
+    { id: 21, name: "Luka Obst", desc: "C38 Hub27 (Ebene 2)", zone: "Zone 5: hub27 & Halle 25/26 (Samim)", p: null },
+    { id: 15, name: "Princess Sarah Tuma", desc: "C29 Halle 25 (Ebene 2)", zone: "Zone 5: hub27 & Halle 25/26 (Samim)", p: null },
+    { id: 23, name: "Aleksa Belakova", desc: "C39 Halle 26 West (Ebene 2)", zone: "Zone 5: hub27 & Halle 25/26 (Samim)", p: null },
 
-    // PAKET 6 (Hassan - 4 Stationen ab 10:30)
-    { id: 5,  name: "Franklin K. Ju Asante", desc: "C10 Kleiner Stern (Ebene 1)", zone: "Paket 6: Sterne & Ost-Eingang (Hassan)", p: null },
-    { id: 11, name: "Melisa Korkmaz", desc: "C23 Großer Stern (Ebene 2)", zone: "Paket 6: Sterne & Ost-Eingang (Hassan)", p: null },
-    { id: 16, name: "Karl Naaßner", desc: "C24 Kleiner Stern (Ebene 2)", zone: "Paket 6: Sterne & Ost-Eingang (Hassan)", p: null },
-    { id: 19, name: "Aiyana Tressel", desc: "C35 Halle 14.1 (Eingang Ost)", zone: "Paket 6: Sterne & Ost-Eingang (Hassan)", p: null },
+    // ZONE 6 (Hassan)
+    { id: 5,  name: "Franklin K. Ju Asante", desc: "C10 Kleiner Stern (Ebene 1)", zone: "Zone 6: Sterne & Ost-Eingang (Hassan)", p: null },
+    { id: 11, name: "Melisa Korkmaz", desc: "C23 Großer Stern (Ebene 2)", zone: "Zone 6: Sterne & Ost-Eingang (Hassan)", p: null },
+    { id: 16, name: "Karl Naaßner", desc: "C24 Kleiner Stern (Ebene 2)", zone: "Zone 6: Sterne & Ost-Eingang (Hassan)", p: null },
+    { id: 19, name: "Aiyana Tressel", desc: "C35 Halle 14.1 (Eingang Ost)", zone: "Zone 6: Sterne & Ost-Eingang (Hassan)", p: null },
 
-    // PAKET 7 (Joris Runner)
-    { id: 18, name: "Simon Ferber", desc: "C34 Eingang Halle 9 (Ebene 1)", zone: "Paket 7: Ausreißer & Weite Posten (Joris Runner)", p: null },
-    { id: 12, name: "Anna Ribbeck", desc: "C25 Eingang Nord / Palais 19", zone: "Paket 7: Ausreißer & Weite Posten (Joris Runner)", p: null },
-    { id: 13, name: "Simon Schreiner", desc: "C27 Trompete 20/21 (Ebene 2)", zone: "Paket 7: Ausreißer & Weite Posten (Joris Runner)", p: null },
+    // ZONE 7 (Joris Runner)
+    { id: 18, name: "Simon Ferber", desc: "C34 Eingang Halle 9 (Ebene 1)", zone: "Zone 7: Ausreißer & Weite Posten (Joris Runner)", p: null },
+    { id: 12, name: "Anna Ribbeck", desc: "C25 Eingang Nord / Palais 19", zone: "Zone 7: Ausreißer & Weite Posten (Joris Runner)", p: null },
+    { id: 13, name: "Simon Schreiner", desc: "C27 Trompete 20/21 (Ebene 2)", zone: "Zone 7: Ausreißer & Weite Posten (Joris Runner)", p: null },
 
     // SELBSTVERSORGER
     { id: 4,  name: "Caroline Jansen", desc: "C09 Großer Stern (Doppel)", zone: "Marshall-Haus & Großer Stern (Selbstversorger)", p: null },
@@ -192,11 +234,11 @@ var appData = {
 };
 
 function persist() {
-  try { localStorage.setItem("innotrans_stable_v14", JSON.stringify(appData)); } catch(e){}
+  try { localStorage.setItem("innotrans_v15_5min", JSON.stringify(appData)); } catch(e){}
 }
 
 var loaded = null;
-try { loaded = JSON.parse(localStorage.getItem("innotrans_stable_v14")); } catch(e){}
+try { loaded = JSON.parse(localStorage.getItem("innotrans_v15_5min")); } catch(e){}
 if (loaded && loaded.covers && loaded.covers.length > 0) appData = loaded;
 
 function toM(str) {
@@ -336,7 +378,7 @@ function render() {
   leg.innerHTML = "<span style='color:var(--muted); font-weight:bold;'>Springer:</span>";
   appData.covers.forEach(function(c) {
     var m = covMinutes[c.name] || 0;
-    leg.innerHTML += "<span class='badge-cov' style='background:" + c.color + "'>" + c.name.split(" ")[0] + " (" + m + "m)</span>";
+    leg.innerHTML += "<span class='badge-cov' style='background:" + c.color + "'>" + c.name.split(" ")[0] + " (" + (c.start||"11:15") + "-" + (c.end||"15:30") + " | " + m + "m)</span>";
   });
 
   var gBody = document.getElementById("gantt-body");
@@ -393,6 +435,7 @@ function render() {
   renderEditCards();
 }
 
+// 5-MINUTEN-RASTER BEIM DRAG & DROP
 function initDesktopDrag(barEl, personId, trackEl) {
   var startX = 0, origLeftPct = 0, isDragging = false;
 
@@ -422,7 +465,8 @@ function initDesktopDrag(barEl, personId, trackEl) {
       if (barEl.dataset.dragged === "true") {
         var finalPct = parseFloat(barEl.style.left);
         var currentMins = T_START + (finalPct / 100) * T_TOTAL;
-        var snappedMins = Math.round(currentMins / 15) * 15;
+        // EXAKT 5-MINUTEN RASTERN
+        var snappedMins = Math.round(currentMins / 5) * 5;
         
         var person = appData.people.find(function(x){ return x.id === personId; });
         if (person && person.p) {
@@ -476,6 +520,8 @@ function openModal(pId) {
   if (!p) return;
 
   document.getElementById("m-title").innerText = p.name + " (" + p.desc + ")";
+  document.getElementById("m-start").value = p.p ? p.p.start : "11:15";
+  document.getElementById("m-dur").value = p.p ? p.p.dur : "60";
 
   var sel = document.getElementById("m-cover");
   sel.innerHTML = '<option value="">-- Fester Springer --</option>' + 
@@ -497,13 +543,14 @@ function saveModal() {
   var custom = document.getElementById("m-custom").value.trim();
   var chosen = document.getElementById("m-cover").value;
   var finalCover = custom || chosen || "Freier Springer";
+  var chosenStart = document.getElementById("m-start").value || "11:15";
+  var chosenDur = parseInt(document.getElementById("m-dur").value, 10) || 60;
 
-  if (!p.p) {
-    p.p = { start: "12:00", dur: 60, cover: finalCover };
-  } else {
-    p.p.cover = finalCover;
-    p.p.dur = 60;
-  }
+  p.p = {
+    start: chosenStart,
+    dur: chosenDur,
+    cover: finalCover
+  };
 
   persist();
   closeModal();
@@ -514,6 +561,93 @@ function deleteModal() {
   var p = appData.people.find(function(x){ return x.id === activeModalPId; });
   if (p) { p.p = null; persist(); }
   closeModal();
+  render();
+}
+
+// MODAL: SPRINGER ZEITEN & NAMEN
+function openCoversModal() {
+  var box = document.getElementById("covers-list-box");
+  box.innerHTML = "";
+
+  appData.covers.forEach(function(c, i) {
+    var row = document.createElement("div");
+    row.className = "modal-row";
+    row.innerHTML = 
+      '<input type="text" value="' + c.name + '" id="cov-name-' + i + '" style="flex:2;">' +
+      '<input type="time" value="' + (c.start||"11:15") + '" id="cov-start-' + i + '" style="flex:1;">' +
+      '<input type="time" value="' + (c.end||"15:30") + '" id="cov-end-' + i + '" style="flex:1;">';
+    box.appendChild(row);
+  });
+
+  document.getElementById("covers-modal").style.display = "flex";
+}
+
+function closeCoversModal() { document.getElementById("covers-modal").style.display = "none"; }
+
+function saveCoversModal() {
+  appData.covers.forEach(function(c, i) {
+    var n = document.getElementById("cov-name-" + i).value.trim();
+    var s = document.getElementById("cov-start-" + i).value;
+    var e = document.getElementById("cov-end-" + i).value;
+    if (n) c.name = n;
+    if (s) c.start = s;
+    if (e) c.end = e;
+  });
+  persist();
+  closeCoversModal();
+  render();
+}
+
+// MODAL: TEAMMITGLIEDER
+function openTeamModal() {
+  var box = document.getElementById("team-edit-box");
+  box.innerHTML = "";
+
+  appData.people.forEach(function(p, i) {
+    var row = document.createElement("div");
+    row.className = "modal-row";
+    row.innerHTML = 
+      '<input type="text" value="' + p.name + '" id="tm-name-' + i + '" style="flex:2;">' +
+      '<input type="text" value="' + p.desc + '" id="tm-desc-' + i + '" style="flex:2;">' +
+      '<button type="button" style="color:var(--danger); background:transparent;" onclick="removeTeamMember(' + i + ')">✕</button>';
+    box.appendChild(row);
+  });
+
+  document.getElementById("team-modal").style.display = "flex";
+}
+
+function closeTeamModal() { document.getElementById("team-modal").style.display = "none"; }
+
+function addTeamMember() {
+  var name = prompt("Name der neuen Person:", "Neue Person");
+  if (!name) return;
+  var desc = prompt("Station / Position:", "Counter");
+  appData.people.push({
+    id: Date.now(),
+    name: name.trim(),
+    desc: desc ? desc.trim() : "Counter",
+    zone: ZONES[0],
+    p: null
+  });
+  openTeamModal();
+}
+
+function removeTeamMember(idx) {
+  if (confirm("Person wirklich aus der Liste löschen?")) {
+    appData.people.splice(idx, 1);
+    openTeamModal();
+  }
+}
+
+function saveTeamModal() {
+  appData.people.forEach(function(p, i) {
+    var n = document.getElementById("tm-name-" + i);
+    var d = document.getElementById("tm-desc-" + i);
+    if (n && n.value.trim()) p.name = n.value.trim();
+    if (d && d.value.trim()) p.desc = d.value.trim();
+  });
+  persist();
+  closeTeamModal();
   render();
 }
 
