@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>InnoTrans – Zonen- & Pausenplaner</title>
+  <title>InnoTrans – Pausenplaner Pro</title>
   
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,22 +19,23 @@
       --primary: #38bdf8;
       --danger: #ef4444;
       --warning: #f59e0b;
-      --conflict-zone: rgba(239, 68, 68, 0.35);
+      --conflict-zone: rgba(239, 68, 68, 0.4);
       --conflict-border: #ef4444;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; }
     body { background: var(--bg); color: var(--text); padding: 8px; padding-bottom: 90px; }
     
     .top-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     h1 { font-size: 1.05rem; color: var(--primary); }
     .action-buttons { display: flex; gap: 6px; }
     .btn-toggle { background: #22c55e; color: #000; font-weight: bold; border: none; padding: 7px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
+    .btn-settings { background: #334155; color: #fff; border: 1px solid var(--border); padding: 7px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
     .btn-auto { background: var(--warning); color: #000; font-weight: bold; border: none; padding: 8px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; width: 100%; margin-bottom: 8px; }
 
     .legend-bar { display: flex; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; margin-bottom: 8px; font-size: 0.75rem; flex-wrap: wrap; align-items: center; }
     .badge-cov { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #fff; font-size: 0.7rem; }
 
-    /* GANTT CONTAINER */
+    /* ZEITLEISTE & GANTT */
     .chart-wrapper {
       background: var(--card);
       border: 1px solid var(--border);
@@ -43,54 +44,58 @@
       -webkit-overflow-scrolling: touch;
       position: relative;
     }
-    .chart-inner { min-width: 680px; position: relative; }
+    .chart-inner { min-width: 720px; position: relative; }
     
     .timeline-head { height: 26px; display: flex; margin-left: 145px; border-bottom: 1px solid var(--border); position: relative; background: #0c1220; }
     .tick-label { position: absolute; transform: translateX(-50%); font-size: 0.65rem; color: var(--muted); font-weight: 600; top: 5px; }
 
-    /* ZONEN GRUPPENKÖPFE */
     .zone-header-row {
       background: #172554;
       color: #93c5fd;
       font-size: 0.72rem;
       font-weight: 800;
-      padding: 4px 8px;
+      padding: 5px 8px;
       border-bottom: 1px solid var(--border);
       border-top: 1px solid var(--border);
-      letter-spacing: 0.5px;
       display: flex;
       justify-content: space-between;
     }
 
-    .chart-row { display: flex; height: 32px; border-bottom: 1px solid #1a2338; position: relative; align-items: center; }
+    .chart-row { display: flex; height: 34px; border-bottom: 1px solid #1a2338; position: relative; align-items: center; }
     .chart-row:nth-child(even) { background: rgba(255,255,255,0.015); }
     .col-name { width: 145px; min-width: 145px; font-size: 0.7rem; font-weight: 600; padding-left: 6px; border-right: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; flex-direction: column; justify-content: center; }
     .col-track { flex: 1; height: 100%; position: relative; }
 
-    .conflict-band { position: absolute; top: 0; bottom: 0; background: var(--conflict-zone); border-left: 1px solid var(--conflict-border); border-right: 1px solid var(--conflict-border); pointer-events: none; z-index: 1; }
-
-    /* PAUSENBALKEN */
+    /* BALKEN MIT TOUCH DRAG-AND-DROP */
     .p-bar {
-      position: absolute; top: 3px; height: 26px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; color: #fff;
-      display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 2; overflow: hidden; white-space: nowrap; cursor: pointer;
+      position: absolute; top: 3px; height: 28px; border-radius: 5px; font-size: 0.65rem; font-weight: 700; color: #fff;
+      display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.6); z-index: 2; overflow: hidden; white-space: nowrap;
+      touch-action: none; cursor: grab;
     }
-    .p-bar-fixed { outline: 2px solid #fff; }
-    .p-bar-buffer-warn { border: 2px dashed #f59e0b !important; }
+    .p-bar:active { cursor: grabbing; opacity: 0.85; transform: scale(1.02); z-index: 10; }
+    .p-bar-conflict { background: #dc2626 !important; border: 2px solid #fff !important; animation: pulse 1s infinite alternate; }
 
-    /* EDIT CONTAINER UNTEN */
+    @keyframes pulse {
+      from { box-shadow: 0 0 4px #ef4444; }
+      to { box-shadow: 0 0 10px #f87171; }
+    }
+
+    /* EDIT CONTAINER */
     .edit-container { margin-top: 12px; }
     .person-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; }
-    .p-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 600; gap: 4px; }
-    select, input { background: #131b2e; border: 1px solid var(--border); color: #fff; padding: 3px 5px; border-radius: 4px; font-size: 0.75rem; }
-    button.btn-add { background: #38bdf8; color: #000; font-weight: bold; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; }
+    .p-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 600; }
+    select, input { background: #131b2e; border: 1px solid var(--border); color: #fff; padding: 4px 6px; border-radius: 4px; font-size: 0.75rem; }
+    button.btn-add { background: #38bdf8; color: #000; font-weight: bold; border: none; padding: 5px 8px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; }
 
-    /* MODAL: SCHNELL-EDIT POPUP BEI KLICK AUF BALKEN */
-    .pop-backdrop { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.85); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 12px; }
-    .pop-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; max-width: 360px; width: 100%; padding: 14px; }
-    .pop-title { font-size: 0.95rem; font-weight: bold; color: var(--primary); margin-bottom: 6px; }
-    .pop-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.8rem; }
+    /* MODAL */
+    .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 200; display: flex; justify-content: center; align-items: center; padding: 10px; }
+    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 14px; }
+    .modal-title { font-size: 1.05rem; color: var(--primary); margin-bottom: 8px; font-weight: bold; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+    .entry-row { display: flex; gap: 4px; align-items: center; margin-bottom: 6px; background: #0c1220; padding: 5px; border-radius: 4px; }
 
-    body.screenshot-mode .edit-container, body.screenshot-mode .btn-auto { display: none !important; }
+    body.screenshot-mode .edit-container, body.screenshot-mode .btn-auto, body.screenshot-mode .btn-settings { display: none !important; }
     body.screenshot-mode .btn-toggle { background: #f59e0b; color: #000; }
     body.screenshot-mode { padding: 4px; }
   </style>
@@ -99,21 +104,21 @@
 
   <div class="top-section">
     <div>
-      <h1>InnoTrans – Zonen-Planer</h1>
-      <div style="font-size:0.7rem; color:var(--muted);">Klick auf Balken zum Bearbeiten • Auto-Zoom aktiv</div>
+      <h1>InnoTrans – Pausenplaner Pro</h1>
+      <div style="font-size:0.7rem; color:var(--muted);">Drag & Drop zum Schieben • Klick für Springer-Tausch</div>
     </div>
     <div class="action-buttons">
+      <button class="btn-settings" onclick="openSetupModal()">⚙️ Setup & Team</button>
       <button class="btn-toggle" id="mode-btn" onclick="toggleScreenshotMode()">📸 Screenshot</button>
     </div>
   </div>
 
-  <button class="btn-auto" onclick="autoGenerateBreaks()">⚡ Pausen nach Zonen verteilen (inkl. 10m Wegezeit-Puffer)</button>
+  <button class="btn-auto" onclick="autoGenerateBreaks()">⚡ Pausen nach Zonen automatisch verteilen (mit 10m Puffer)</button>
 
   <div class="legend-bar" id="legend-container"></div>
 
   <div class="chart-wrapper">
-    <div class="chart-inner">
-      <div id="conflict-layer" style="position:absolute; left:145px; right:0; top:0; bottom:0; pointer-events:none; z-index:1;"></div>
+    <div class="chart-inner" id="chart-inner-el">
       <div class="timeline-head" id="head-ticks"></div>
       <div id="gantt-rows"></div>
     </div>
@@ -121,74 +126,88 @@
 
   <div class="edit-container" id="edit-area">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-      <span style="font-size:0.75rem; color:var(--muted); font-weight:bold;">Mitarbeiterliste & Zonen:</span>
+      <span style="font-size:0.75rem; color:var(--muted); font-weight:bold;">Team-Übersicht & Pausen:</span>
       <button onclick="clearOnlyBreaks()" style="background:transparent; border:none; color:#f87171; font-size:0.75rem; cursor:pointer;">Alle Pausen leeren</button>
     </div>
     <div id="people-list"></div>
   </div>
 
-  <!-- POPUP FÜR DIREKTES BEARBEITEN DES BALKENS -->
-  <div class="pop-backdrop" id="bar-modal" style="display:none;" onclick="closeBarModal(event)">
-    <div class="pop-box" onclick="event.stopPropagation()">
-      <div class="pop-title" id="pop-name">Pause anpassen</div>
-      <div style="font-size:0.75rem; color:var(--muted); margin-bottom:12px;" id="pop-station">Station</div>
+  <!-- POPUP FÜR BALKEN-KLICK (SPRINGER TAUSCHEN) -->
+  <div class="modal-backdrop" id="bar-modal" style="display:none;" onclick="closeBarModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()" style="max-width:360px;">
+      <div class="modal-title" id="pop-title">Pause bearbeiten</div>
+      <div style="font-size:0.75rem; color:var(--muted); margin-bottom:12px;" id="pop-sub">Station</div>
 
-      <div class="pop-row">
-        <span>Pausenspringer:</span>
-        <select id="pop-cover" style="width:160px; font-weight:bold; border-color:var(--primary);"></select>
+      <div class="form-group">
+        <label>1. Fester Springer aus Liste:</label>
+        <select id="pop-cover-sel" style="width:100%;"></select>
       </div>
 
-      <div class="pop-row">
-        <span>Startzeit:</span>
-        <div style="display:flex; gap:4px; align-items:center;">
-          <button type="button" style="background:#23304a; border:1px solid #334155; color:#fff; padding:4px 8px; border-radius:4px;" onclick="popShift(-15)">-15m</button>
-          <input type="time" id="pop-start" style="padding:4px;">
-          <button type="button" style="background:#23304a; border:1px solid #334155; color:#fff; padding:4px 8px; border-radius:4px;" onclick="popShift(15)">+15m</button>
-        </div>
+      <div class="form-group">
+        <label>Oder freien Namen eintragen (z. B. Caroline, Runner, etc.):</label>
+        <input type="text" id="pop-cover-custom" placeholder="Name eingeben..." style="width:100%;">
       </div>
 
-      <div class="pop-row">
-        <span>Dauer:</span>
-        <select id="pop-dur">
-          <option value="30">30 Min</option>
-          <option value="45">45 Min</option>
-          <option value="60">60 Min</option>
+      <div class="form-group">
+        <label>Dauer:</label>
+        <select id="pop-dur" style="width:100%;">
+          <option value="30">30 Minuten</option>
+          <option value="45">45 Minuten</option>
+          <option value="60">60 Minuten</option>
         </select>
       </div>
 
       <div style="display:flex; gap:6px; margin-top:14px;">
-        <button type="button" style="flex:1; background:var(--primary); color:#000; font-weight:bold; border:none; padding:8px; border-radius:4px;" onclick="saveBarModal()">Übernehmen</button>
-        <button type="button" style="background:transparent; color:var(--danger); border:1px solid var(--danger); padding:8px; border-radius:4px;" onclick="deleteCurrentBar()">Löschen</button>
+        <button type="button" class="btn-toggle" style="flex:1; padding:8px;" onclick="saveBarModal()">Übernehmen</button>
+        <button type="button" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; border-radius:4px; cursor:pointer;" onclick="deleteBarModal()">Pause löschen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETUP MODAL: ZONEN & TEAM BEARBEITEN -->
+  <div class="modal-backdrop" id="setup-modal" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-title">⚙️ Team- & Zonen-Setup</div>
+      <p style="font-size:0.75rem; color:var(--muted); margin-bottom:12px;">Definiere Zonen und weise dein Team zu.</p>
+
+      <div class="form-group">
+        <label>Zonen / Bereiche (mit Komma trennen):</label>
+        <input type="text" id="setup-zones-input" style="width:100%;" value="Nord (Halle 1-4), Süd (Halle 5-8), Ost (Halle 14-26), CityCube & Hub27, Marshall-Haus">
+      </div>
+
+      <div class="form-group">
+        <label>Teammitglieder bearbeiten:</label>
+        <div id="setup-people-list"></div>
+      </div>
+
+      <div style="display:flex; gap:6px; margin-top:14px;">
+        <button type="button" class="btn-toggle" style="flex:1; padding:10px;" onclick="saveSetupModal()">Speichern & Schließen</button>
+        <button type="button" class="btn-settings" style="padding:10px;" onclick="closeSetupModal()">Abbrechen</button>
       </div>
     </div>
   </div>
 
 <script>
-var COVER_PALETTE = ["#f59e0b", "#0284c7", "#9333ea", "#ea580c", "#10b981", "#ec4899", "#64748b"];
-
-// Zonen-Definition für saubere Messe-Gruppierung
-var ZONES = ["Nord (Halle 1-4)", "Süd (Halle 5-8)", "Ost (Halle 14-26)", "CityCube & Hub27", "Marshall-Haus (Selbstversorger)"];
+var COLOR_LIST = ["#f59e0b", "#0284c7", "#9333ea", "#ea580c", "#10b981", "#ec4899", "#64748b", "#3b82f6", "#14b8a6"];
 
 var appData = {
+  zones: ["Nord (Halle 1-4)", "Süd (Halle 5-8)", "Ost (Halle 14-26)", "CityCube & Hub27", "Marshall-Haus"],
   covers: [
-    { id: 101, tag: "HA", name: "Hassan Ali Akram", start: "07:30", end: "15:30", zone: "Nord (Halle 1-4)", color: "#f59e0b" },
-    { id: 102, tag: "HR", name: "Henri Reininger", start: "11:15", end: "15:30", zone: "Nord (Halle 1-4)", color: "#0284c7" },
-    { id: 103, tag: "CW", name: "Cairo Würdig", start: "11:15", end: "15:30", zone: "Süd (Halle 5-8)", color: "#9333ea" },
-    { id: 104, tag: "OB", name: "Oluwafemi J. Brown", start: "11:15", end: "15:30", zone: "Ost (Halle 14-26)", color: "#ea580c" },
-    { id: 105, tag: "AE", name: "Ayse M. Ejder", start: "11:15", end: "15:30", zone: "CityCube & Hub27", color: "#10b981" },
-    { id: 106, tag: "SH", name: "Samim Honardoust", start: "11:15", end: "15:30", zone: "Ost (Halle 14-26)", color: "#ec4899" },
-    { id: 107, tag: "JM", name: "Joris Mahnke (Runner)", start: "07:30", end: "18:15", zone: "Alle", color: "#64748b" }
+    { id: 101, name: "Hassan Ali Akram", start: "07:30", end: "15:30", zone: "Nord (Halle 1-4)", color: "#f59e0b" },
+    { id: 102, name: "Henri Reininger", start: "11:15", end: "15:30", zone: "Nord (Halle 1-4)", color: "#0284c7" },
+    { id: 103, name: "Cairo Würdig", start: "11:15", end: "15:30", zone: "Süd (Halle 5-8)", color: "#9333ea" },
+    { id: 104, name: "Oluwafemi J. Brown", start: "11:15", end: "15:30", zone: "Ost (Halle 14-26)", color: "#ea580c" },
+    { id: 105, name: "Ayse M. Ejder", start: "11:15", end: "15:30", zone: "CityCube & Hub27", color: "#10b981" },
+    { id: 106, name: "Samim Honardoust", start: "11:15", end: "15:30", zone: "Ost (Halle 14-26)", color: "#ec4899" }
   ],
   people: [
-    // NORD
     { id: 1, name: "Baran Cakmak", desc: "C31 Halle 1.1a/2.1a", zone: "Nord (Halle 1-4)", p: null },
     { id: 2, name: "Gian Danke", desc: "C03 Halle 3.1/4.1a", zone: "Nord (Halle 1-4)", p: null },
     { id: 3, name: "Tolga Sencan", desc: "C07 Halle 7.1b Foyer", zone: "Nord (Halle 1-4)", p: null },
-    { id: 4, name: "Caroline Jansen", desc: "C09 Großer Stern (Doppel)", zone: "Nord (Halle 1-4)", p: null },
+    { id: 4, name: "Caroline Jansen", desc: "C09 Großer Stern", zone: "Nord (Halle 1-4)", p: null },
     { id: 5, name: "Franklin K. Ju Asante", desc: "C10 Kleiner Stern", zone: "Nord (Halle 1-4)", p: null },
     { id: 6, name: "Lynn Magali Wende", desc: "C12 Halle 1.2a/2.2a", zone: "Nord (Halle 1-4)", p: null },
     { id: 7, name: "Felix Spohr", desc: "C14 Halle 3.2a/4.2a", zone: "Nord (Halle 1-4)", p: null },
-    // SÜD
     { id: 8, name: "Mavie Borch", desc: "C18 Halle 5.2b/6.2b", zone: "Süd (Halle 5-8)", p: null },
     { id: 9, name: "Inti Emilio Wackwitz", desc: "C19 Halle 7/7.2a", zone: "Süd (Halle 5-8)", p: null },
     { id: 10, name: "Ognyana Samardzhieva", desc: "C22 Halle 7.2c/8.2", zone: "Süd (Halle 5-8)", p: null },
@@ -196,30 +215,27 @@ var appData = {
     { id: 12, name: "Anna Ribbeck", desc: "C25 Vorhalle 19", zone: "Süd (Halle 5-8)", p: null },
     { id: 13, name: "Simon Schreiner", desc: "C27 Eingangsfoyer 20/21", zone: "Süd (Halle 5-8)", p: null },
     { id: 22, name: "Finn Heyse", desc: "C16 Foyer Halle 5.2a", zone: "Süd (Halle 5-8)", p: null },
-    // OST
     { id: 14, name: "Arthur Garner", desc: "C28 Halle 24", zone: "Ost (Halle 14-26)", p: null },
     { id: 15, name: "Princess Sarah Tuma", desc: "C29 Halle 25", zone: "Ost (Halle 14-26)", p: null },
     { id: 16, name: "Karl Naaßner", desc: "C24 Kleiner Stern", zone: "Ost (Halle 14-26)", p: null },
     { id: 18, name: "Simon Ferber", desc: "C34 Eingang Halle 9", zone: "Ost (Halle 14-26)", p: null },
     { id: 19, name: "Aiyana Tressel", desc: "C35 Halle 14.1", zone: "Ost (Halle 14-26)", p: null },
     { id: 23, name: "Aleksa Belakova", desc: "C39 Halle 26", zone: "Ost (Halle 14-26)", p: null },
-    // CITYCUBE
     { id: 17, name: "Darius-Marvin Westerhold", desc: "C32 CityCube West", zone: "CityCube & Hub27", p: null },
     { id: 20, name: "Benjamin Smajic", desc: "C36 CityCube Ost", zone: "CityCube & Hub27", p: null },
     { id: 21, name: "Luka Obst", desc: "C38 Hub27", zone: "CityCube & Hub27", p: null },
-    // MARSHALL HAUS
-    { id: 24, name: "Johanna Riesopp", desc: "Marshall-Haus (Selbstversorger)", zone: "Marshall-Haus (Selbstversorger)", p: null },
-    { id: 25, name: "Martina Errickson", desc: "Marshall-Haus (Selbstversorger)", zone: "Marshall-Haus (Selbstversorger)", p: null },
-    { id: 26, name: "Osaze Okodolor", desc: "Marshall-Haus (Selbstversorger)", zone: "Marshall-Haus (Selbstversorger)", p: null }
+    { id: 24, name: "Johanna Riesopp", desc: "Marshall-Haus", zone: "Marshall-Haus", p: null },
+    { id: 25, name: "Martina Errickson", desc: "Marshall-Haus", zone: "Marshall-Haus", p: null },
+    { id: 26, name: "Osaze Okodolor", desc: "Marshall-Haus", zone: "Marshall-Haus", p: null }
   ]
 };
 
 function persist() {
-  try { localStorage.setItem("innotrans_zones_v3", JSON.stringify(appData)); } catch(e){}
+  try { localStorage.setItem("innotrans_app_v4", JSON.stringify(appData)); } catch(e){}
 }
 
 var loaded = null;
-try { loaded = JSON.parse(localStorage.getItem("innotrans_zones_v3")); } catch(e){}
+try { loaded = JSON.parse(localStorage.getItem("innotrans_app_v4")); } catch(e){}
 if (loaded && loaded.covers && loaded.covers.length > 0) appData = loaded;
 
 function toM(str) {
@@ -234,39 +250,26 @@ function toTimeStr(mins) {
   return h + ":" + m;
 }
 
-// AUTO-ZOOM: Dynamische Zeitleiste berechnen (schneidet leere Randzeiten ab)
-function getAutoZoomRange() {
-  var activeStarts = [];
-  var activeEnds = [];
-
-  appData.covers.forEach(function(c) {
-    activeStarts.push(toM(c.start));
-    activeEnds.push(toM(c.end));
-  });
-
-  // Falls Pausen außerhalb der Springerzeiten liegen, mitnehmen
+function getAutoZoom() {
+  var starts = [675]; // 11:15
+  var ends = [930];   // 15:30
   appData.people.forEach(function(p) {
     if (p.p) {
-      var s = toM(p.p.start);
-      activeStarts.push(s);
-      activeEnds.push(s + p.p.dur);
+      starts.push(toM(p.p.start));
+      ends.push(toM(p.p.start) + p.p.dur);
     }
   });
-
-  var minM = Math.min.apply(null, activeStarts.length ? activeStarts : [675]);
-  var maxM = Math.max.apply(null, activeEnds.length ? activeEnds : [930]);
-
-  // Auf nächste halbe Stunde runden
-  var tStart = Math.max(450, Math.floor(minM / 30) * 30); // frühestens 07:30
-  var tEnd = Math.min(1080, Math.ceil(maxM / 30) * 30 + 30); // Puffer nach hinten
+  var minM = Math.min.apply(null, starts);
+  var maxM = Math.max.apply(null, ends);
+  var tStart = Math.max(450, Math.floor(minM / 30) * 30);
+  var tEnd = Math.min(1080, Math.ceil(maxM / 30) * 30 + 30);
   return { start: tStart, end: tEnd, total: tEnd - tStart };
 }
 
 function renderTicks() {
-  var range = getAutoZoomRange();
+  var range = getAutoZoom();
   var el = document.getElementById("head-ticks");
   el.innerHTML = "";
-
   for (var m = range.start; m <= range.end; m += 30) {
     var pct = ((m - range.start) / range.total) * 100;
     var d = document.createElement("div");
@@ -277,37 +280,28 @@ function renderTicks() {
   }
 }
 
-// AUTO-DISTRIBUTION NACH ZONEN
 function autoGenerateBreaks() {
   var BUFFER_MINS = 10;
-  var coverBusyUntil = {};
-  appData.covers.forEach(function(c){ coverBusyUntil[c.id] = toM(c.start); });
+  var busyUntil = {};
+  appData.covers.forEach(function(c){ busyUntil[c.name] = toM(c.start); });
 
-  // Marshall-Haus hat keinen Springerbedarf
-  var candidates = appData.people.filter(function(p){ 
-    return !p.zone.includes("Marshall-Haus"); 
-  });
+  var candidates = appData.people.filter(function(p){ return !p.zone.includes("Marshall-Haus"); });
 
   candidates.forEach(function(p) {
-    // Passenden Springer für diese Zone finden
-    var matching = appData.covers.filter(function(c) {
-      if (c.id === 107) return false; // Runner Joris nicht vollplanen
-      return c.zone === p.zone || c.zone === "Alle";
-    });
+    var match = appData.covers.filter(function(c){ return c.zone === p.zone; });
+    if (match.length === 0) match = appData.covers;
 
-    if (matching.length === 0) matching = appData.covers.filter(function(c){ return c.id !== 107; });
-    matching.sort(function(a, b){ return coverBusyUntil[a.id] - coverBusyUntil[b.id]; });
-
-    var chosen = matching[0];
-    var bStart = coverBusyUntil[chosen.id];
+    match.sort(function(a, b){ return busyUntil[a.name] - busyUntil[b.name]; });
+    var chosen = match[0];
+    var bStart = busyUntil[chosen.name];
     var cEnd = toM(chosen.end);
 
     if (bStart + 45 <= cEnd) {
-      p.p = { start: toTimeStr(bStart), dur: 45, coverId: chosen.id };
-      coverBusyUntil[chosen.id] = bStart + 45 + BUFFER_MINS;
+      p.p = { start: toTimeStr(bStart), dur: 45, coverName: chosen.name };
+      busyUntil[chosen.name] = bStart + 45 + BUFFER_MINS;
     } else if (bStart + 30 <= cEnd) {
-      p.p = { start: toTimeStr(bStart), dur: 30, coverId: chosen.id };
-      coverBusyUntil[chosen.id] = bStart + 30 + BUFFER_MINS;
+      p.p = { start: toTimeStr(bStart), dur: 30, coverName: chosen.name };
+      busyUntil[chosen.name] = bStart + 30 + BUFFER_MINS;
     }
   });
 
@@ -321,65 +315,67 @@ function clearOnlyBreaks() {
   render();
 }
 
-// GANTT RENDERN INKL. ZONEN-KÖPFEN & WEGEZEIT-CHECK
+/* HAUPTRENDERER MIT ECHTER SPRINGER-KONFLIKTPRÜFUNG */
 function updatePlan() {
-  var range = getAutoZoomRange();
+  var range = getAutoZoom();
   var allBreaks = [];
 
   appData.people.forEach(function(p) {
     if (p.p) {
+      var s = toM(p.p.start);
       allBreaks.push({
         pId: p.id,
         pName: p.name,
         desc: p.desc,
         zone: p.zone,
-        start: toM(p.p.start),
+        start: s,
         dur: p.p.dur,
-        end: toM(p.p.start) + p.p.dur,
-        coverId: p.p.coverId
+        end: s + p.p.dur,
+        coverName: p.p.coverName || "Unbekannt"
       });
     }
   });
 
-  // Springer Auslastung & 10m Wegezeit-Prüfung
-  allBreaks.sort(function(a, b){ return a.start - b.start; });
-  var coverLastEnd = {};
-  var coverWorked = {};
-  appData.covers.forEach(function(c){ coverWorked[c.id] = 0; coverLastEnd[c.id] = 0; });
-
-  allBreaks.forEach(function(b) {
-    var cov = appData.covers.find(function(c){ return c.id == b.coverId; });
-    b.assigned = cov || { tag: "?", name: "Kein Cover", color: "#64748b" };
-
-    if (cov) {
-      coverWorked[cov.id] += b.dur;
-      // Hat dieser Springer weniger als 10m Puffer zum letzten Einsatz?
-      if (coverLastEnd[cov.id] > 0 && (b.start - coverLastEnd[cov.id] < 10) && (b.start >= coverLastEnd[cov.id])) {
-        b.bufferWarn = true;
+  // Springer-Doppelbelegungen exakt berechnen
+  var conflicts = new Set();
+  for (var i = 0; i < allBreaks.length; i++) {
+    for (var j = i + 1; j < allBreaks.length; j++) {
+      var b1 = allBreaks[i];
+      var b2 = allBreaks[j];
+      if (b1.coverName && b1.coverName !== "Selbstversorger" && b1.coverName === b2.coverName) {
+        // Überschneidung prüfen: b1.start < b2.end && b2.start < b1.end
+        if (b1.start < b2.end && b2.start < b1.end) {
+          conflicts.add(b1.pId);
+          conflicts.add(b2.pId);
+        }
       }
-      coverLastEnd[cov.id] = b.end;
     }
+  }
+
+  // Legende berechnen
+  var coverMinutes = {};
+  allBreaks.forEach(function(b){
+    coverMinutes[b.coverName] = (coverMinutes[b.coverName] || 0) + b.dur;
   });
 
-  // Legende
   var leg = document.getElementById("legend-container");
   leg.innerHTML = "<span style='font-size:0.7rem; color:var(--muted);'>Springer:</span>";
   appData.covers.forEach(function(c) {
-    leg.innerHTML += "<span class='badge-cov' style='background:" + c.color + "'>" + c.tag + ": " + c.name.split(" ")[0] + " (" + (coverWorked[c.id] || 0) + "m)</span>";
+    var m = coverMinutes[c.name] || 0;
+    leg.innerHTML += "<span class='badge-cov' style='background:" + c.color + "'>" + c.name.split(" ")[0] + " (" + m + "m)</span>";
   });
 
-  // Gantt nach Zonen sortiert rendern
+  // Gantt nach Zonen rendern
   var gWrap = document.getElementById("gantt-rows");
   gWrap.innerHTML = "";
 
-  ZONES.forEach(function(zoneName) {
+  appData.zones.forEach(function(zoneName) {
     var zonePeople = appData.people.filter(function(p){ return p.zone === zoneName; });
     if (zonePeople.length === 0) return;
 
-    // Zonen Header Zeile
     var zHead = document.createElement("div");
     zHead.className = "zone-header-row";
-    zHead.innerHTML = "<span>📍 " + zoneName + "</span><span>" + zonePeople.length + " Posten</span>";
+    zHead.innerHTML = "<span>📍 " + zoneName + "</span><span>" + zonePeople.length + " Stationen</span>";
     gWrap.appendChild(zHead);
 
     zonePeople.forEach(function(p) {
@@ -396,18 +392,27 @@ function updatePlan() {
 
       var b = allBreaks.find(function(x){ return x.pId === p.id; });
       if (b) {
+        var isConflict = conflicts.has(p.id);
+        var covObj = appData.covers.find(function(c){ return c.name === b.coverName; });
+        var barColor = isConflict ? "#dc2626" : (covObj ? covObj.color : "#64748b");
+
         var bar = document.createElement("div");
-        bar.className = "p-bar " + (b.bufferWarn ? "p-bar-buffer-warn" : "");
+        bar.className = "p-bar " + (isConflict ? "p-bar-conflict" : "");
         bar.style.left = Math.max(0, ((b.start - range.start) / range.total) * 100) + "%";
         bar.style.width = ((b.dur / range.total) * 100) + "%";
-        bar.style.background = b.assigned.color;
-        bar.innerText = b.assigned.tag + " • " + toTimeStr(b.start) + (b.bufferWarn ? " ⚡" : "");
-        
-        // KLICK AUF BALKEN ÖFFNET DIREKT DAS SCHNELL-MENÜ
-        bar.onclick = function(ev) {
-          ev.stopPropagation();
-          openBarModal(p.id);
-        };
+        bar.style.background = barColor;
+        bar.innerText = (isConflict ? "⚠️ " : "") + b.coverName.split(" ")[0] + " • " + toTimeStr(b.start);
+
+        // DRAG & DROP INITIALISIEREN
+        enableDrag(bar, p.id, range, tCol);
+
+        // KLICK FÜR POPUP
+        bar.addEventListener("click", function(ev) {
+          if (!bar.dataset.dragged) {
+            openBarModal(p.id);
+          }
+        });
+
         tCol.appendChild(bar);
       }
 
@@ -415,6 +420,57 @@ function updatePlan() {
       gWrap.appendChild(row);
     });
   });
+}
+
+/* FLÜSSIGES TOUCH & MOUSE DRAG AND DROP */
+function enableDrag(el, personId, range, trackCol) {
+  var startX = 0;
+  var origLeftPct = 0;
+  var isDragging = false;
+
+  function onPointerDown(e) {
+    isDragging = true;
+    el.dataset.dragged = "";
+    startX = e.clientX || (e.touches && e.touches[0].clientX);
+    origLeftPct = parseFloat(el.style.left) || 0;
+    
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+  }
+
+  function onPointerMove(e) {
+    if (!isDragging) return;
+    el.dataset.dragged = "true";
+    var curX = e.clientX || (e.touches && e.touches[0].clientX);
+    var deltaPx = curX - startX;
+    var trackWidth = trackCol.clientWidth;
+    var deltaPct = (deltaPx / trackWidth) * 100;
+    var newPct = Math.max(0, Math.min(100 - parseFloat(el.style.width), origLeftPct + deltaPct));
+    el.style.left = newPct + "%";
+  }
+
+  function onPointerUp(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    window.removeEventListener("pointermove", onPointerMove);
+    window.removeEventListener("pointerup", onPointerUp);
+
+    if (el.dataset.dragged === "true") {
+      // 15-Minuten Raster berechnen
+      var finalPct = parseFloat(el.style.left);
+      var calcMins = range.start + (finalPct / 100) * range.total;
+      var snapMins = Math.round(calcMins / 15) * 15;
+      
+      var p = appData.people.find(function(x){ return x.id === personId; });
+      if (p && p.p) {
+        p.p.start = toTimeStr(snapMins);
+        persist();
+        render();
+      }
+    }
+  }
+
+  el.addEventListener("pointerdown", onPointerDown);
 }
 
 function renderEditForm() {
@@ -427,23 +483,17 @@ function renderEditForm() {
 
     var html = 
       '<div class="p-head">' +
-        '<div>' +
-          '<b>' + p.name + '</b> ' +
-          '<small style="color:var(--muted);">(' + p.desc + ')</small>' +
-        '</div>' +
-        '<select onchange="changePersonZone(' + p.id + ', this.value)" style="border-color:var(--primary);">' +
-          ZONES.map(function(z){ return '<option value="' + z + '" ' + (p.zone === z ? 'selected' : '') + '>' + z + '</option>'; }).join('') +
-        '</select>' +
+        '<div><b>' + p.name + '</b> <small style="color:var(--muted);">(' + p.desc + ')</small></div>' +
+        '<span style="font-size:0.68rem; background:#1e293b; color:#38bdf8; padding:2px 6px; border-radius:4px;">' + p.zone + '</span>' +
       '</div>';
 
     if (!p.p) {
-      html += '<button class="btn-add" style="margin-top:4px;" onclick="openBarModal(' + p.id + ')">+ Pause anlegen</button>';
+      html += '<button class="btn-add" style="margin-top:5px;" onclick="createPause(' + p.id + ')">+ Pause eintragen</button>';
     } else {
-      var cov = appData.covers.find(function(c){ return c.id == p.p.coverId; });
       html += 
-        '<div style="font-size:0.75rem; margin-top:4px; display:flex; justify-content:space-between; align-items:center;">' +
-          '<span>Eingeteilt: <b>' + p.p.start + ' Uhr</b> (' + p.p.dur + 'm) durch <b>' + (cov ? cov.name : 'Kein Springer') + '</b></span>' +
-          '<button class="btn-add" style="background:#334155; color:#fff;" onclick="openBarModal(' + p.id + ')">Bearbeiten</button>' +
+        '<div style="font-size:0.75rem; margin-top:5px; display:flex; justify-content:space-between; align-items:center;">' +
+          '<span>Pause: <b>' + p.p.start + ' Uhr</b> (' + p.p.dur + 'm) • Springer: <b style="color:var(--primary);">' + (p.p.coverName || 'Keiner') + '</b></span>' +
+          '<button class="btn-add" style="background:#334155; color:#fff;" onclick="openBarModal(' + p.id + ')">Ändern</button>' +
         '</div>';
     }
 
@@ -452,66 +502,109 @@ function renderEditForm() {
   });
 }
 
-function changePersonZone(pId, newZone) {
+function createPause(pId) {
   var p = appData.people.find(function(x){ return x.id === pId; });
-  if (p) { p.zone = newZone; persist(); render(); }
+  if (!p) return;
+  var defCover = appData.covers.find(function(c){ return c.zone === p.zone; }) || appData.covers[0];
+  p.p = { start: "12:00", dur: 45, coverName: defCover ? defCover.name : "Hassan Ali Akram" };
+  persist();
+  render();
 }
 
-/* MODAL / SCHNELL-EDIT BEI KLICK AUF BALKEN */
-var activeModalPersonId = null;
+/* MODAL: SPRINGER TAUSCHEN BEI KLICK */
+var activeModalPId = null;
 
 function openBarModal(pId) {
-  activeModalPersonId = pId;
+  activeModalPId = pId;
   var p = appData.people.find(function(x){ return x.id === pId; });
   if (!p) return;
 
-  document.getElementById("pop-name").innerText = p.name;
-  document.getElementById("pop-station").innerText = p.desc + " (" + p.zone + ")";
+  document.getElementById("pop-title").innerText = p.name;
+  document.getElementById("pop-sub").innerText = p.desc + " (" + p.zone + ")";
 
-  // Springer Dropdown befüllen
-  var cSel = document.getElementById("pop-cover");
-  cSel.innerHTML = '<option value="">Kein Springer</option>' + 
+  var cSel = document.getElementById("pop-cover-sel");
+  cSel.innerHTML = '<option value="">-- Name aus Liste wählen --</option>' + 
     appData.covers.map(function(c){
-      var isSel = (p.p && p.p.coverId == c.id) ? "selected" : "";
-      return '<option value="' + c.id + '" ' + isSel + '>' + c.name + '</option>';
+      var isS = (p.p && p.p.coverName === c.name) ? "selected" : "";
+      return '<option value="' + c.name + '" ' + isS + '>' + c.name + '</option>';
     }).join('');
 
-  document.getElementById("pop-start").value = p.p ? p.p.start : "11:30";
+  document.getElementById("pop-cover-custom").value = (p.p && !appData.covers.some(function(c){ return c.name === p.p.coverName; })) ? p.p.coverName : "";
   document.getElementById("pop-dur").value = p.p ? p.p.dur : "45";
 
   document.getElementById("bar-modal").style.display = "flex";
 }
 
-function closeBarModal(ev) {
+function closeBarModal(e) {
   document.getElementById("bar-modal").style.display = "none";
 }
 
-function popShift(delta) {
-  var el = document.getElementById("pop-start");
-  var cur = toM(el.value) + delta;
-  el.value = toTimeStr(cur);
-}
-
 function saveBarModal() {
-  var p = appData.people.find(function(x){ return x.id === activeModalPersonId; });
+  var p = appData.people.find(function(x){ return x.id === activeModalPId; });
   if (!p) return;
 
-  var covId = document.getElementById("pop-cover").value;
-  p.p = {
-    start: document.getElementById("pop-start").value,
-    dur: parseInt(document.getElementById("pop-dur").value, 10),
-    coverId: covId ? parseInt(covId, 10) : null
-  };
+  var custom = document.getElementById("pop-cover-custom").value.trim();
+  var sel = document.getElementById("pop-cover-sel").value;
+  var finalName = custom || sel || "Freier Springer";
+
+  if (!p.p) p.p = { start: "12:00", dur: 45, coverName: finalName };
+  else {
+    p.p.coverName = finalName;
+    p.p.dur = parseInt(document.getElementById("pop-dur").value, 10);
+  }
 
   persist();
   document.getElementById("bar-modal").style.display = "none";
   render();
 }
 
-function deleteCurrentBar() {
-  var p = appData.people.find(function(x){ return x.id === activeModalPersonId; });
+function deleteBarModal() {
+  var p = appData.people.find(function(x){ return x.id === activeModalPId; });
   if (p) { p.p = null; persist(); }
   document.getElementById("bar-modal").style.display = "none";
+  render();
+}
+
+/* SETUP MODAL: ZONEN & TEAM BEARBEITEN */
+function openSetupModal() {
+  document.getElementById("setup-zones-input").value = appData.zones.join(", ");
+  var box = document.getElementById("setup-people-list");
+  box.innerHTML = "";
+
+  appData.people.forEach(function(p, idx) {
+    var row = document.createElement("div");
+    row.className = "entry-row";
+    row.innerHTML = 
+      '<input type="text" value="' + p.name + '" style="flex:2;" id="st-name-' + idx + '">' +
+      '<input type="text" value="' + p.desc + '" style="flex:2;" id="st-desc-' + idx + '">' +
+      '<select style="flex:2;" id="st-zone-' + idx + '">' +
+        appData.zones.map(function(z){ return '<option value="' + z + '" ' + (p.zone === z ? 'selected' : '') + '>' + z + '</option>'; }).join('') +
+      '</select>';
+    box.appendChild(row);
+  });
+
+  document.getElementById("setup-modal").style.display = "flex";
+}
+
+function closeSetupModal() {
+  document.getElementById("setup-modal").style.display = "none";
+}
+
+function saveSetupModal() {
+  var rawZones = document.getElementById("setup-zones-input").value;
+  appData.zones = rawZones.split(",").map(function(s){ return s.trim(); }).filter(Boolean);
+
+  appData.people.forEach(function(p, idx) {
+    var nEl = document.getElementById("st-name-" + idx);
+    var dEl = document.getElementById("st-desc-" + idx);
+    var zEl = document.getElementById("st-zone-" + idx);
+    if (nEl) p.name = nEl.value.trim();
+    if (dEl) p.desc = dEl.value.trim();
+    if (zEl) p.zone = zEl.value;
+  });
+
+  persist();
+  closeSetupModal();
   render();
 }
 
