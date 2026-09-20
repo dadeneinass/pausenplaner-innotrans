@@ -103,8 +103,9 @@
     .status-selbst { color: var(--muted); font-style: italic; }
 
     .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 999; }
-    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; width: 480px; max-height: 90vh; overflow-y: auto; padding: 16px; }
+    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; width: 500px; max-height: 90vh; overflow-y: auto; padding: 16px; }
     .modal-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 6px; }
+    .sub-panel { background: #0c1424; border: 1px dashed var(--border); border-radius: 6px; padding: 10px; margin-top: 10px; }
 
     body.screenshot-mode .table-card, 
     body.screenshot-mode .btn-auto, 
@@ -118,7 +119,7 @@
   <div class="top-bar">
     <div>
       <h1>InnoTrans 2026 – Pausen- & Zonen-Planung</h1>
-      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">Stand: 20.09.2026 • 15m Wegzeit-Puffer • Intelligente Zonen-Verteilung</div>
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">Stand: 20.09.2026 • 2. Pause optional • 15m Startpuffer • 15m Wegzeit-Puffer</div>
     </div>
     <div class="btn-group">
       <button class="btn-util" onclick="openCoversModal()">⏱️ Springer verwalten & Zeiten</button>
@@ -154,43 +155,65 @@
     </table>
   </div>
 
-  <!-- MODAL: BALKEN BEARBEITEN -->
+  <!-- MODAL: BALKEN BEARBEITEN (INKL. 2. PAUSE) -->
   <div class="modal" id="edit-modal" style="display:none;" onclick="closeModal()">
     <div class="modal-box" onclick="event.stopPropagation()">
       <h3 style="color:var(--primary); margin-bottom:10px;" id="m-title">Pause anpassen</h3>
       
-      <div style="margin-bottom:12px;">
-        <label style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Pausenzeit (Start):</label>
-        <input type="time" id="m-start" style="width:100%; font-size:0.9rem; font-weight:bold;">
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <label style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Pausendauer in Minuten:</label>
-        <div style="display:flex; gap:6px;">
-          <input type="number" id="m-dur" min="10" max="180" step="5" style="flex:1; font-size:0.9rem; font-weight:bold;">
-          <select onchange="if(this.value) document.getElementById('m-dur').value = this.value" style="width:110px;">
-            <option value="">Vorlage...</option>
-            <option value="30">30 Min</option>
-            <option value="45">45 Min</option>
-            <option value="60">60 Min</option>
-            <option value="90">90 Min</option>
-          </select>
+      <!-- PAUSE 1 -->
+      <div style="font-weight:bold; font-size:0.8rem; color:#38bdf8; margin-bottom:4px;">1. Pause</div>
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <div style="flex:1;">
+          <label style="display:block; font-size:0.7rem; color:var(--muted); margin-bottom:2px;">Start:</label>
+          <input type="time" id="m-start" style="width:100%; font-weight:bold;">
+        </div>
+        <div style="flex:1;">
+          <label style="display:block; font-size:0.7rem; color:var(--muted); margin-bottom:2px;">Dauer (Min):</label>
+          <input type="number" id="m-dur" min="10" max="180" step="5" style="width:100%;">
         </div>
       </div>
-
-      <div style="margin-bottom:12px;">
-        <label style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Pausenspringer:</label>
+      <div style="margin-bottom:8px;">
+        <label style="display:block; font-size:0.7rem; color:var(--muted); margin-bottom:2px;">Pausenspringer:</label>
         <select id="m-cover" style="width:100%;"></select>
       </div>
-
       <div style="margin-bottom:12px;">
-        <label style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Oder freier Name (Aushilfe / Runner):</label>
+        <label style="display:block; font-size:0.7rem; color:var(--muted); margin-bottom:2px;">Freier Name (Aushilfe/Runner):</label>
         <input type="text" id="m-custom" placeholder="z. B. Joris (Runner)..." style="width:100%;">
+      </div>
+
+      <!-- OPTIONALE 2. PAUSE -->
+      <div class="sub-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-weight:bold; font-size:0.8rem; color:#f59e0b;">2. Pause (Optional)</span>
+          <label style="font-size:0.75rem; color:#fff; cursor:pointer;">
+            <input type="checkbox" id="m-p2-enable" onchange="toggleP2Fields()"> Aktivieren
+          </label>
+        </div>
+        <div id="p2-fields" style="display:none;">
+          <div style="display:flex; gap:8px; margin-bottom:8px;">
+            <div style="flex:1;">
+              <label style="display:block; font-size:0.7rem; color:var(--muted); margin-bottom:2px;">Start:</label>
+              <input type="time" id="m-p2-start" style="width:100%; font-weight:bold;">
+            </div>
+            <div style="flex:1;">
+              <label style="display:block; font-size:0.7rem; color:var(--muted); margin-bottom:2px;">Dauer (Min):</label>
+              <input type="number" id="m-p2-dur" min="10" max="180" step="5" style="width:100%;">
+            </div>
+          </div>
+          <div style="margin-bottom:8px;">
+            <label style="display:block; font-size:0.7rem; color:var(--muted); margin-bottom:2px;">Pausenspringer:</label>
+            <select id="m-p2-cover" style="width:100%;"></select>
+          </div>
+          <div>
+            <label style="display:block; font-size:0.7rem; color:var(--muted); margin-bottom:2px;">Freier Name:</label>
+            <input type="text" id="m-p2-custom" placeholder="z. B. Joris (Runner)..." style="width:100%;">
+          </div>
+        </div>
       </div>
 
       <div style="display:flex; justify-content:space-between; gap:6px; margin-top:16px;">
         <button style="flex:1; background:var(--primary); color:#000;" onclick="saveModal()">Speichern</button>
-        <button style="background:transparent; border:1px solid var(--danger); color:var(--danger);" onclick="deleteModal()">Pause entfernen</button>
+        <button style="background:transparent; border:1px solid var(--danger); color:var(--danger);" onclick="deleteModal()">Pausen entfernen</button>
       </div>
     </div>
   </div>
@@ -248,54 +271,54 @@ var appData = {
   ],
   people: [
     // ZONE 1 (3 Personen)
-    { id: 18, name: "Darius-Marvin Westerhold", desc: "C32 CityCube West (Ebene 1)", zone: "Zone 1: CityCube & Halle 7 Süd", p: null },
-    { id: 21, name: "Benjamin Smajic", desc: "C36 CityCube Ost (Zwischenebene)", zone: "Zone 1: CityCube & Halle 7 Süd", p: null },
-    { id: 9,  name: "Inti Emilio Wackwitz", desc: "C19 Halle 7/7.2a", zone: "Zone 1: CityCube & Halle 7 Süd", p: null },
+    { id: 18, name: "Darius-Marvin Westerhold", desc: "C32 CityCube West (Ebene 1)", zone: "Zone 1: CityCube & Halle 7 Süd", p: null, p2: null },
+    { id: 21, name: "Benjamin Smajic", desc: "C36 CityCube Ost (Zwischenebene)", zone: "Zone 1: CityCube & Halle 7 Süd", p: null, p2: null },
+    { id: 9,  name: "Inti Emilio Wackwitz", desc: "C19 Halle 7/7.2a", zone: "Zone 1: CityCube & Halle 7 Süd", p: null, p2: null },
 
     // ZONE 2 (3 Personen)
-    { id: 17, name: "Baran Cakmak", desc: "C31 Halle 1.1a / 2.1a Lichthof", zone: "Zone 2: Spange 1–4 West", p: null },
-    { id: 5,  name: "Lynn Magali Wende", desc: "C12 Halle 1.2a / 2.2a", zone: "Zone 2: Spange 1–4 West", p: null },
-    { id: 6,  name: "Felix Spohr", desc: "C14 Halle 3.2a / 4.2a", zone: "Zone 2: Spange 1–4 West", p: null },
+    { id: 17, name: "Baran Cakmak", desc: "C31 Halle 1.1a / 2.1a Lichthof", zone: "Zone 2: Spange 1–4 West", p: null, p2: null },
+    { id: 5,  name: "Lynn Magali Wende", desc: "C12 Halle 1.2a / 2.2a", zone: "Zone 2: Spange 1–4 West", p: null, p2: null },
+    { id: 6,  name: "Felix Spohr", desc: "C14 Halle 3.2a / 4.2a", zone: "Zone 2: Spange 1–4 West", p: null, p2: null },
 
     // ZONE 3 (3 Personen)
-    { id: 1,  name: "Gian Danke", desc: "C03 Halle 3.1/4.1a Ost-seitig", zone: "Zone 3: Spange 3–7 Mitte", p: null },
-    { id: 2,  name: "Tolga Sencan", desc: "C07 Halle 7.1b Foyer zur Halle 4.1", zone: "Zone 3: Spange 3–7 Mitte", p: null },
-    { id: 10, name: "Ognyana Samardzhieva", desc: "C22 Halle 7.2 c / 8.2", zone: "Zone 3: Spange 3–7 Mitte", p: null },
+    { id: 1,  name: "Gian Danke", desc: "C03 Halle 3.1/4.1a Ost-seitig", zone: "Zone 3: Spange 3–7 Mitte", p: null, p2: null },
+    { id: 2,  name: "Tolga Sencan", desc: "C07 Halle 7.1b Foyer zur Halle 4.1", zone: "Zone 3: Spange 3–7 Mitte", p: null, p2: null },
+    { id: 10, name: "Ognyana Samardzhieva", desc: "C22 Halle 7.2 c / 8.2", zone: "Zone 3: Spange 3–7 Mitte", p: null, p2: null },
 
     // ZONE 4 (3 Personen)
-    { id: 7,  name: "Finn Heyse", desc: "C16 Kopffoyer Halle 5.2a", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null },
-    { id: 8,  name: "Ilaida Kelm", desc: "C18 Halle 5.2 b / 6.2 b", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null },
-    { id: 15, name: "Arthur Garner", desc: "C28 Halle 24", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null },
+    { id: 7,  name: "Finn Heyse", desc: "C16 Kopffoyer Halle 5.2a", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null, p2: null },
+    { id: 8,  name: "Ilaida Kelm", desc: "C18 Halle 5.2 b / 6.2 b", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null, p2: null },
+    { id: 15, name: "Arthur Garner", desc: "C28 Halle 24", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null, p2: null },
 
     // ZONE 5 (3 Personen)
-    { id: 22, name: "Luka Obst", desc: "C38 Hub27", zone: "Zone 5: hub27 & Halle 25/26", p: null },
-    { id: 16, name: "Princess Sarah Tuma Gwangwa", desc: "C29 Halle 25", zone: "Zone 5: hub27 & Halle 25/26", p: null },
-    { id: 23, name: "Aleksa Belakova", desc: "C39 Halle 26", zone: "Zone 5: hub27 & Halle 25/26", p: null },
+    { id: 22, name: "Luka Obst", desc: "C38 Hub27", zone: "Zone 5: hub27 & Halle 25/26", p: null, p2: null },
+    { id: 16, name: "Princess Sarah Tuma Gwangwa", desc: "C29 Halle 25", zone: "Zone 5: hub27 & Halle 25/26", p: null, p2: null },
+    { id: 23, name: "Aleksa Belakova", desc: "C39 Halle 26", zone: "Zone 5: hub27 & Halle 25/26", p: null, p2: null },
 
     // ZONE 6 (4 Personen)
-    { id: 4,  name: "Franklin Kiladi Ju Asante", desc: "C10 Kleiner Stern", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
-    { id: 11, name: "Melisa Korkmaz", desc: "C23 Großer Stern", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
-    { id: 12, name: "Martina Errickson", desc: "C24 Kleiner Stern", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
-    { id: 20, name: "Aiyana Tressel", desc: "C35 Halle 14.1", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
+    { id: 4,  name: "Franklin Kiladi Ju Asante", desc: "C10 Kleiner Stern", zone: "Zone 6: Sterne & Ost-Eingang", p: null, p2: null },
+    { id: 11, name: "Melisa Korkmaz", desc: "C23 Großer Stern", zone: "Zone 6: Sterne & Ost-Eingang", p: null, p2: null },
+    { id: 12, name: "Martina Errickson", desc: "C24 Kleiner Stern", zone: "Zone 6: Sterne & Ost-Eingang", p: null, p2: null },
+    { id: 20, name: "Aiyana Tressel", desc: "C35 Halle 14.1", zone: "Zone 6: Sterne & Ost-Eingang", p: null, p2: null },
 
     // ZONE 7 (Ausreißer - Joris Runner)
-    { id: 19, name: "Simon Ferber", desc: "C34 Eingang Halle 9", zone: "Zone 7: Ausreißer & Weite Posten", p: null },
-    { id: 13, name: "Anna Ribbeck", desc: "C25 Vorhalle 19", zone: "Zone 7: Ausreißer & Weite Posten", p: null },
-    { id: 14, name: "Simon Schreiner", desc: "C27 Eingangsfoyer 20/21", zone: "Zone 7: Ausreißer & Weite Posten", p: null },
+    { id: 19, name: "Simon Ferber", desc: "C34 Eingang Halle 9", zone: "Zone 7: Ausreißer & Weite Posten", p: null, p2: null },
+    { id: 13, name: "Anna Ribbeck", desc: "C25 Vorhalle 19", zone: "Zone 7: Ausreißer & Weite Posten", p: null, p2: null },
+    { id: 14, name: "Simon Schreiner", desc: "C27 Eingangsfoyer 20/21", zone: "Zone 7: Ausreißer & Weite Posten", p: null, p2: null },
 
     // SELBSTSTÄNDIG
-    { id: 3,  name: "Caroline Jansen", desc: "C09 Großer Stern", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null },
-    { id: 24, name: "Johanna Riesopp", desc: "Messeleitung Marshall-Haus", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null },
-    { id: 25, name: "Osaze Okodolor", desc: "Messeleitung Marshall-Haus", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null }
+    { id: 3,  name: "Caroline Jansen", desc: "C09 Großer Stern", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null, p2: null },
+    { id: 24, name: "Johanna Riesopp", desc: "Messeleitung Marshall-Haus", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null, p2: null },
+    { id: 25, name: "Osaze Okodolor", desc: "Messeleitung Marshall-Haus", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null, p2: null }
   ]
 };
 
 function persist() {
-  try { localStorage.setItem("innotrans_live_zoom_v24_fixed", JSON.stringify(appData)); } catch(e){}
+  try { localStorage.setItem("innotrans_v25_dualbreak", JSON.stringify(appData)); } catch(e){}
 }
 
 var loaded = null;
-try { loaded = JSON.parse(localStorage.getItem("innotrans_live_zoom_v24_fixed")); } catch(e){}
+try { loaded = JSON.parse(localStorage.getItem("innotrans_v25_dualbreak")); } catch(e){}
 if (loaded && loaded.covers && loaded.covers.length > 0) appData = loaded;
 
 function toM(str) {
@@ -331,6 +354,11 @@ function getDynamicRange() {
       starts.push(s);
       ends.push(s + (p.p.dur || 60));
     }
+    if (p.p2) {
+      var s2 = toM(p.p2.start);
+      starts.push(s2);
+      ends.push(s2 + (p.p2.dur || 60));
+    }
   });
 
   appData.covers.forEach(function(c) {
@@ -360,26 +388,21 @@ function renderTicks(range) {
   }
 }
 
-// INTELLIGENTE ZONEN-LOGIK:
-// - Hassan für Zone 6 (4 Personen ab 10:30 Uhr)
-// - 3er-Springer für Zone 1 bis 5 (ab 11:15 Uhr)
-// - Joris (Runner) für Zone 7 (Ausreißer)
+// AUTO-DISTRIBUTE MIT 15 MIN PUFFER NACH ARBEITSSTART
 function autoDistribute() {
-  // Selbstständige leeren
   appData.people.forEach(function(p) {
+    p.p2 = null; // 2. Pause leeren
     if (p.zone.toLowerCase().includes("selbstständig")) p.p = null;
   });
 
-  // Springer identifizieren
   var hassan = appData.covers.find(function(c){ return c.name.toLowerCase().includes("hassan"); }) || appData.covers[0];
   var joris = appData.covers.find(function(c){ return c.name.toLowerCase().includes("joris"); });
   
-  // Die regulären 3er-Springer (alle außer Hassan und Joris)
   var standardCovers = appData.covers.filter(function(c){
     return c !== hassan && c !== joris;
   });
 
-  // 1. Zone 6: Sterne & Ost-Eingang (4 Stationen -> Hassan)
+  // 1. Zone 6: Hassan (4 Stationen ab 10:30 Uhr)
   var z6People = appData.people.filter(function(p){ return p.zone === "Zone 6: Sterne & Ost-Eingang"; });
   var hassanStart = toM("10:30");
   z6People.forEach(function(p) {
@@ -388,10 +411,10 @@ function autoDistribute() {
       dur: 60,
       cover: hassan.name
     };
-    hassanStart += 60 + 15; // 60 Min Pause + 15 Min Puffer = 75 Min Slot
+    hassanStart += 60 + 15; // 60m Pause + 15m Wegzeit
   });
 
-  // 2. Zonen 1 bis 5 (jeweils 3 Stationen -> je ein regulärer Springer)
+  // 2. Zonen 1 bis 5 (jeweils 3 Stationen, START MIT +15m PUFFER NACH DIENSTBEGINN: 11:30 Uhr)
   var threePersonZones = [
     "Zone 1: CityCube & Halle 7 Süd",
     "Zone 2: Spange 1–4 West",
@@ -405,18 +428,21 @@ function autoDistribute() {
     var assignedCover = standardCovers[idx % standardCovers.length];
     if (!assignedCover) return;
 
-    var curStart = toM(assignedCover.start || "11:15");
+    var baseStart = toM(assignedCover.start || "11:15");
+    var curStart = baseStart + 15; // 15 Min Puffer nach Ankunft -> Start um 11:30 Uhr
+    curStart = Math.ceil(curStart / 5) * 5;
+
     pList.forEach(function(p) {
       p.p = {
         start: toTimeStr(curStart),
         dur: 60,
         cover: assignedCover.name
       };
-      curStart += 60 + 15; // 15 Min Wegzeit-Puffer
+      curStart += 60 + 15; // 15m Wegzeit
     });
   });
 
-  // 3. Zone 7: Ausreißer & Weite Posten (3 Stationen -> Joris Runner)
+  // 3. Zone 7: Ausreißer (Joris Runner)
   var z7People = appData.people.filter(function(p){ return p.zone === "Zone 7: Ausreißer & Weite Posten"; });
   var runnerCover = joris || standardCovers[standardCovers.length - 1];
   var runnerStart = toM("11:30");
@@ -435,7 +461,7 @@ function autoDistribute() {
 
 function clearBreaks() {
   if (confirm("Wirklich alle Pausen leeren?")) {
-    appData.people.forEach(function(p){ p.p = null; });
+    appData.people.forEach(function(p){ p.p = null; p.p2 = null; });
     persist();
     render();
   }
@@ -467,57 +493,77 @@ function render() {
   var allBreaks = [];
   appData.people.forEach(function(p) {
     if (p.p) {
-      var s = toM(p.p.start);
+      var s1 = toM(p.p.start);
       allBreaks.push({
         pId: p.id,
+        breakIndex: 1,
         pName: p.name,
         desc: p.desc,
         zone: p.zone,
-        start: s,
+        start: s1,
         dur: p.p.dur,
-        end: s + p.p.dur,
+        end: s1 + p.p.dur,
         cover: p.p.cover || "Unbekannt"
+      });
+    }
+    if (p.p2) {
+      var s2 = toM(p.p2.start);
+      allBreaks.push({
+        pId: p.id,
+        breakIndex: 2,
+        pName: p.name,
+        desc: p.desc,
+        zone: p.zone,
+        start: s2,
+        dur: p.p2.dur,
+        end: s2 + p.p2.dur,
+        cover: p.p2.cover || "Unbekannt"
       });
     }
   });
 
-  var conflictPIds = new Set();
-  var wegzeitDangerPIds = new Set();
-  var wegzeitWarnPIds = new Set();
+  var conflictBreakKeys = new Set();
+  var wegzeitDangerKeys = new Set();
+  var wegzeitWarnKeys = new Set();
   var overtimeInfo = {};
 
   allBreaks.sort(function(a, b){ return a.start - b.start; });
 
+  // 1. Feierabend
   allBreaks.forEach(function(b) {
+    var key = b.pId + "_" + b.breakIndex;
     var covObj = appData.covers.find(function(c){ return c.name === b.cover; });
     if (covObj && covObj.end && covObj.start) {
       var sEnd = toM(covObj.end);
       var sStart = toM(covObj.start);
       if (b.end > sEnd) {
-        overtimeInfo[b.pId] = "FEIERABEND (Ende " + covObj.end + ")";
+        overtimeInfo[key] = "FEIERABEND (" + covObj.end + ")";
       } else if (b.start < sStart) {
-        overtimeInfo[b.pId] = "VOR DIENST (Start " + covObj.start + ")";
+        overtimeInfo[key] = "VOR DIENST (" + covObj.start + ")";
       }
     }
   });
 
+  // 2. Konflikt- & Wegzeit-Prüfung
   for (var i = 0; i < allBreaks.length; i++) {
     for (var j = i + 1; j < allBreaks.length; j++) {
       var b1 = allBreaks[i];
       var b2 = allBreaks[j];
+      var k1 = b1.pId + "_" + b1.breakIndex;
+      var k2 = b2.pId + "_" + b2.breakIndex;
       
       if (b1.cover && b1.cover !== "Unbekannt" && b1.cover === b2.cover) {
         if (b1.start < b2.end && b2.start < b1.end) {
-          conflictPIds.add(b1.pId);
-          conflictPIds.add(b2.pId);
+          conflictBreakKeys.add(k1);
+          conflictBreakKeys.add(k2);
         } else {
           var gap = b2.start - b1.end;
           if (gap >= 0 && gap < 10) {
-            wegzeitDangerPIds.add(b1.pId);
-            wegzeitDangerPIds.add(b2.pId);
+            wegzeitDangerKeys.add(k1);
+            wegzeitDangerKeys.add(k2);
           } else if (gap >= 10 && gap < 15) {
-            wegzeitWarnPIds.add(b1.pId);
-            wegzeitWarnPIds.add(b2.pId);
+            wegzeitWarnKeys.add(k1);
+            wegzeitWarnKeys.add(k2);
           }
         }
       }
@@ -569,12 +615,14 @@ function render() {
         track.appendChild(nowLine);
       }
 
-      var b = allBreaks.find(function(x){ return x.pId === p.id; });
-      if (b) {
-        var isConflict = conflictPIds.has(p.id);
-        var isOvertime = overtimeInfo[p.id];
-        var isWegzeitDanger = wegzeitDangerPIds.has(p.id) && !isConflict;
-        var isWegzeitWarn = wegzeitWarnPIds.has(p.id) && !isConflict && !isWegzeitDanger;
+      // Render alle Pausen dieser Person (p.p und p.p2)
+      var pBreaks = allBreaks.filter(function(x){ return x.pId === p.id; });
+      pBreaks.forEach(function(b) {
+        var bKey = b.pId + "_" + b.breakIndex;
+        var isConflict = conflictBreakKeys.has(bKey);
+        var isOvertime = overtimeInfo[bKey];
+        var isWegzeitDanger = wegzeitDangerKeys.has(bKey) && !isConflict;
+        var isWegzeitWarn = wegzeitWarnKeys.has(bKey) && !isConflict && !isWegzeitDanger;
 
         var covObj = appData.covers.find(function(c){ return c.name === b.cover; });
         var color = covObj ? covObj.color : "#475569";
@@ -597,20 +645,21 @@ function render() {
           labelPrefix = "";
         }
 
+        var tagP2 = b.breakIndex === 2 ? " [P2]" : "";
         bar.className = "bar " + warnClasses;
         bar.style.left = Math.max(0, ((b.start - range.start) / range.total) * 100) + "%";
         bar.style.width = ((b.dur / range.total) * 100) + "%";
         bar.style.background = color;
-        bar.innerText = labelPrefix + b.cover.split(" ")[0] + " • " + toTimeStr(b.start);
+        bar.innerText = labelPrefix + b.cover.split(" ")[0] + tagP2 + " • " + toTimeStr(b.start);
 
-        initDesktopDrag(bar, p.id, track, range);
+        initDesktopDrag(bar, p.id, b.breakIndex, track, range);
 
         bar.onclick = function(e) {
           if (!bar.dataset.dragged) openModal(p.id);
         };
 
         track.appendChild(bar);
-      }
+      });
 
       row.appendChild(track);
       gBody.appendChild(row);
@@ -632,7 +681,7 @@ function render() {
   renderTable();
 }
 
-function initDesktopDrag(barEl, personId, trackEl, range) {
+function initDesktopDrag(barEl, personId, breakIndex, trackEl, range) {
   var startX = 0, origLeftPct = 0, isDragging = false;
 
   barEl.onmousedown = function(e) {
@@ -664,10 +713,13 @@ function initDesktopDrag(barEl, personId, trackEl, range) {
         var snappedMins = Math.round(currentMins / 5) * 5;
         
         var person = appData.people.find(function(x){ return x.id === personId; });
-        if (person && person.p) {
-          person.p.start = toTimeStr(snappedMins);
-          persist();
-          render();
+        if (person) {
+          var targetBreak = breakIndex === 2 ? person.p2 : person.p;
+          if (targetBreak) {
+            targetBreak.start = toTimeStr(snappedMins);
+            persist();
+            render();
+          }
         }
       }
     };
@@ -690,9 +742,19 @@ function renderTable() {
     var pTime = "";
     var pCover = "";
 
-    if (p.p) {
-      pTime = '<b>' + p.p.start + '</b> (' + p.p.dur + 'm)';
-      pCover = '<b>' + p.p.cover + '</b>';
+    if (p.p || p.p2) {
+      var times = [];
+      var covers = [];
+      if (p.p) {
+        times.push('<b>' + p.p.start + '</b> (' + p.p.dur + 'm)');
+        covers.push(p.p.cover);
+      }
+      if (p.p2) {
+        times.push('<span style="color:#f59e0b;"><b>' + p.p2.start + '</b> (' + p.p2.dur + 'm)</span>');
+        covers.push(p.p2.cover);
+      }
+      pTime = times.join("<br>");
+      pCover = '<b>' + covers.join("<br>") + '</b>';
     } else {
       if (isSelbststaendigZone) {
         pTime = '<span class="status-selbst">selbstständig</span>';
@@ -722,23 +784,51 @@ function updatePersonZone(pId, newZone) {
 
 var activeModalPId = null;
 
+function toggleP2Fields() {
+  var chk = document.getElementById("m-p2-enable");
+  document.getElementById("p2-fields").style.display = chk.checked ? "block" : "none";
+}
+
 function openModal(pId) {
   activeModalPId = pId;
   var p = appData.people.find(function(x){ return x.id === pId; });
   if (!p) return;
 
   document.getElementById("m-title").innerText = p.name + " (" + p.desc + ")";
-  document.getElementById("m-start").value = p.p ? p.p.start : "11:15";
+  
+  // 1. Pause
+  document.getElementById("m-start").value = p.p ? p.p.start : "11:30";
   document.getElementById("m-dur").value = p.p ? p.p.dur : 60;
 
-  var sel = document.getElementById("m-cover");
-  sel.innerHTML = '<option value="">-- Fester Springer --</option>' + 
+  var covOptions = '<option value="">-- Fester Springer --</option>' + 
     appData.covers.map(function(c){
-      var s = (p.p && p.p.cover === c.name) ? "selected" : "";
-      return '<option value="' + c.name + '" ' + s + '>' + c.name + ' (' + c.start + '-' + c.end + ')</option>';
+      return '<option value="' + c.name + '">' + c.name + ' (' + c.start + '-' + c.end + ')</option>';
     }).join('');
 
+  var sel1 = document.getElementById("m-cover");
+  sel1.innerHTML = covOptions;
+  if (p.p && p.p.cover) sel1.value = p.p.cover;
   document.getElementById("m-custom").value = (p.p && !appData.covers.some(function(c){ return c.name === p.p.cover; })) ? p.p.cover : "";
+
+  // 2. Pause
+  var chk2 = document.getElementById("m-p2-enable");
+  var sel2 = document.getElementById("m-p2-cover");
+  sel2.innerHTML = covOptions;
+
+  if (p.p2) {
+    chk2.checked = true;
+    document.getElementById("m-p2-start").value = p.p2.start;
+    document.getElementById("m-p2-dur").value = p.p2.dur;
+    sel2.value = p.p2.cover;
+    document.getElementById("m-p2-custom").value = (!appData.covers.some(function(c){ return c.name === p.p2.cover; })) ? p.p2.cover : "";
+  } else {
+    chk2.checked = false;
+    document.getElementById("m-p2-start").value = "14:00";
+    document.getElementById("m-p2-dur").value = 30;
+    document.getElementById("m-p2-custom").value = "";
+  }
+
+  toggleP2Fields();
   document.getElementById("edit-modal").style.display = "flex";
 }
 
@@ -748,17 +838,36 @@ function saveModal() {
   var p = appData.people.find(function(x){ return x.id === activeModalPId; });
   if (!p) return;
 
-  var custom = document.getElementById("m-custom").value.trim();
-  var chosen = document.getElementById("m-cover").value;
-  var finalCover = custom || chosen || "Freier Springer";
-  var chosenStart = document.getElementById("m-start").value || "11:15";
-  var chosenDur = parseInt(document.getElementById("m-dur").value, 10) || 60;
+  // 1. Pause speichern
+  var custom1 = document.getElementById("m-custom").value.trim();
+  var chosen1 = document.getElementById("m-cover").value;
+  var finalCover1 = custom1 || chosen1 || "Freier Springer";
+  var chosenStart1 = document.getElementById("m-start").value || "11:30";
+  var chosenDur1 = parseInt(document.getElementById("m-dur").value, 10) || 60;
 
   p.p = {
-    start: chosenStart,
-    dur: chosenDur,
-    cover: finalCover
+    start: chosenStart1,
+    dur: chosenDur1,
+    cover: finalCover1
   };
+
+  // 2. Pause speichern
+  var hasP2 = document.getElementById("m-p2-enable").checked;
+  if (hasP2) {
+    var custom2 = document.getElementById("m-p2-custom").value.trim();
+    var chosen2 = document.getElementById("m-p2-cover").value;
+    var finalCover2 = custom2 || chosen2 || "Freier Springer";
+    var chosenStart2 = document.getElementById("m-p2-start").value || "14:00";
+    var chosenDur2 = parseInt(document.getElementById("m-p2-dur").value, 10) || 30;
+
+    p.p2 = {
+      start: chosenStart2,
+      dur: chosenDur2,
+      cover: finalCover2
+    };
+  } else {
+    p.p2 = null;
+  }
 
   persist();
   closeModal();
@@ -767,7 +876,7 @@ function saveModal() {
 
 function deleteModal() {
   var p = appData.people.find(function(x){ return x.id === activeModalPId; });
-  if (p) { p.p = null; persist(); }
+  if (p) { p.p = null; p.p2 = null; persist(); }
   closeModal();
   render();
 }
@@ -857,7 +966,8 @@ function addTeamMember() {
     name: name.trim(),
     desc: desc ? desc.trim() : "Counter",
     zone: ZONES[0],
-    p: null
+    p: null,
+    p2: null
   });
   openTeamModal();
 }
