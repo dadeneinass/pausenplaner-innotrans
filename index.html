@@ -81,13 +81,9 @@
     }
     .bar:active { cursor: grabbing; box-shadow: 0 4px 12px rgba(0,0,0,0.8); z-index: 10; opacity: 0.9; }
     
-    /* Echte Doppelbelegung */
     .bar-conflict { background: #dc2626 !important; border: 2px solid #fff !important; animation: blink 1s infinite alternate; }
-    /* Schichtzeit überschritten (Feierabend) */
     .bar-overtime { background: repeating-linear-gradient(45deg, #b91c1c, #b91c1c 10px, #7f1d1d 10px, #7f1d1d 20px) !important; border: 2px solid #f87171 !important; }
-    /* Wegzeit unter 10 Minuten */
     .bar-wegzeit-danger { border: 2px dashed #ef4444 !important; }
-    /* Wegzeit 10 bis unter 15 Minuten */
     .bar-wegzeit-warn { border: 2px dashed #f59e0b !important; }
 
     @keyframes blink {
@@ -95,7 +91,6 @@
       to { box-shadow: 0 0 12px #f87171; }
     }
 
-    /* AUFGERÄUMTE TABELLE UNTEN */
     .table-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 16px; }
     table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
     th { text-align: left; padding: 10px 8px; color: var(--muted); border-bottom: 2px solid var(--border); font-weight: 700; }
@@ -113,7 +108,7 @@
 
     body.screenshot-mode .table-card, 
     body.screenshot-mode .btn-auto, 
-    body.screenshot-mode .btn-util,
+    body.screenshot-mode .btn-util, 
     body.screenshot-mode .btn-reset { display: none !important; }
     body.screenshot-mode .btn-shot { background: #f59e0b; color: #000; }
   </style>
@@ -123,7 +118,7 @@
   <div class="top-bar">
     <div>
       <h1>InnoTrans 2026 – Pausen- & Zonen-Planung</h1>
-      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">Springer frei erweiterbar • Feierabend-Warnung • Dynamischer Auto-Zoom</div>
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">Dynamischer Algorithmus • 15m Wegzeit-Puffer • Live-Uhrzeit</div>
     </div>
     <div class="btn-group">
       <button class="btn-util" onclick="openCoversModal()">⏱️ Springer verwalten & Zeiten</button>
@@ -297,11 +292,11 @@ var appData = {
 };
 
 function persist() {
-  try { localStorage.setItem("innotrans_live_zoom_v22", JSON.stringify(appData)); } catch(e){}
+  try { localStorage.setItem("innotrans_live_zoom_v23", JSON.stringify(appData)); } catch(e){}
 }
 
 var loaded = null;
-try { loaded = JSON.parse(localStorage.getItem("innotrans_live_zoom_v22")); } catch(e){}
+try { loaded = JSON.parse(localStorage.getItem("innotrans_live_zoom_v23")); } catch(e){}
 if (loaded && loaded.covers && loaded.covers.length > 0) appData = loaded;
 
 function toM(str) {
@@ -366,40 +361,54 @@ function renderTicks(range) {
   }
 }
 
+// INTELLIGENTE, DYNAMISCHE ZONEN-VERTEILUNG
 function autoDistribute() {
-  var assignments = {
-    17: { start: "11:15", dur: 60, cover: "Henri Reininger" },
-    20: { start: "12:25", dur: 60, cover: "Henri Reininger" },
-    9:  { start: "13:35", dur: 60, cover: "Henri Reininger" },
+  if (appData.covers.length === 0) {
+    alert("Keine Springer vorhanden. Bitte lege zuerst Springer an!");
+    return;
+  }
 
-    1:  { start: "11:15", dur: 60, cover: "Cairo Würdig" },
-    6:  { start: "12:25", dur: 60, cover: "Cairo Würdig" },
-    7:  { start: "13:35", dur: 60, cover: "Cairo Würdig" },
+  // 1. Zonen filtern, die wirklich Pausenspringer benötigen
+  var activeZones = ZONES.filter(function(z) {
+    return !z.toLowerCase().includes("selbstständig") && !z.toLowerCase().includes("selbstversorger");
+  });
 
-    2:  { start: "11:15", dur: 60, cover: "Oluwafemi J. Brown" },
-    3:  { start: "12:25", dur: 60, cover: "Oluwafemi J. Brown" },
-    10: { start: "13:35", dur: 60, cover: "Oluwafemi J. Brown" },
-
-    22: { start: "11:15", dur: 60, cover: "Ayse M. Ejder" },
-    8:  { start: "12:25", dur: 60, cover: "Ayse M. Ejder" },
-    14: { start: "13:35", dur: 60, cover: "Ayse M. Ejder" },
-
-    21: { start: "11:15", dur: 60, cover: "Samim Honardoust" },
-    15: { start: "12:25", dur: 60, cover: "Samim Honardoust" },
-    23: { start: "13:35", dur: 60, cover: "Samim Honardoust" },
-
-    5:  { start: "10:30", dur: 60, cover: "Hassan Ali Akram" },
-    11: { start: "11:40", dur: 60, cover: "Hassan Ali Akram" },
-    16: { start: "12:50", dur: 60, cover: "Hassan Ali Akram" },
-    19: { start: "14:00", dur: 60, cover: "Hassan Ali Akram" },
-
-    18: { start: "11:30", dur: 60, cover: "Joris Mahnke (Runner)" },
-    12: { start: "12:40", dur: 60, cover: "Joris Mahnke (Runner)" },
-    13: { start: "13:50", dur: 60, cover: "Joris Mahnke (Runner)" }
-  };
-
+  // 2. Allen selbstständigen Posten die Pause leeren
   appData.people.forEach(function(p) {
-    p.p = assignments[p.id] ? assignments[p.id] : null;
+    if (p.zone.toLowerCase().includes("selbstständig") || p.zone.toLowerCase().includes("selbstversorger")) {
+      p.p = null;
+    }
+  });
+
+  // 3. Zonen der Reihe nach mit den echten aktuellen Springern besetzen
+  activeZones.forEach(function(zoneName, zoneIdx) {
+    var peopleInZone = appData.people.filter(function(p){ return p.zone === zoneName; });
+    if (peopleInZone.length === 0) return;
+
+    // Weist der Zone zyklisch einen aktuellen Springer aus covers zu
+    var cover = appData.covers[zoneIdx % appData.covers.length];
+    var coverStartM = toM(cover.start || "11:15");
+    var coverEndM = toM(cover.end || "15:30");
+
+    // Falls ein Frühschichtler (wie Hassan) da ist, startet er ab 10:30, sonst direkt ab Dienstbeginn
+    var currentStart = (coverStartM <= 480) ? toM("10:30") : coverStartM;
+    // Garantiert auf 5 Minuten runden
+    currentStart = Math.ceil(currentStart / 5) * 5;
+
+    peopleInZone.forEach(function(person) {
+      var dur = 60; // Standard 60 Minuten
+      if (currentStart + dur <= coverEndM) {
+        person.p = {
+          start: toTimeStr(currentStart),
+          dur: dur,
+          cover: cover.name
+        };
+        // Exakt 15 Minuten Wegzeit-Puffer für die nächste Pause
+        currentStart = currentStart + dur + 15;
+      } else {
+        person.p = null; // Zeit reicht nicht mehr vor Feierabend
+      }
+    });
   });
 
   persist();
@@ -461,7 +470,6 @@ function render() {
 
   allBreaks.sort(function(a, b){ return a.start - b.start; });
 
-  // 1. Feierabend-Prüfung
   allBreaks.forEach(function(b) {
     var covObj = appData.covers.find(function(c){ return c.name === b.cover; });
     if (covObj && covObj.end && covObj.start) {
@@ -475,7 +483,6 @@ function render() {
     }
   });
 
-  // 2. Konflikt- & Wegzeit-Prüfung
   for (var i = 0; i < allBreaks.length; i++) {
     for (var j = i + 1; j < allBreaks.length; j++) {
       var b1 = allBreaks[i];
@@ -710,7 +717,7 @@ function openModal(pId) {
   sel.innerHTML = '<option value="">-- Fester Springer --</option>' + 
     appData.covers.map(function(c){
       var s = (p.p && p.p.cover === c.name) ? "selected" : "";
-      return '<option value="' + c.name + '" ' + s + '>' + c.name + '</option>';
+      return '<option value="' + c.name + '" ' + s + '>' + c.name + ' (' + c.start + '-' + c.end + ')</option>';
     }).join('');
 
   document.getElementById("m-custom").value = (p.p && !appData.covers.some(function(c){ return c.name === p.p.cover; })) ? p.p.cover : "";
