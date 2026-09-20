@@ -118,7 +118,7 @@
   <div class="top-bar">
     <div>
       <h1>InnoTrans 2026 – Pausen- & Zonen-Planung</h1>
-      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">Dynamischer Algorithmus • 15m Wegzeit-Puffer • Live-Uhrzeit</div>
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">Stand: 20.09.2026 • 15m Wegzeit-Puffer • Intelligente Zonen-Verteilung</div>
     </div>
     <div class="btn-group">
       <button class="btn-util" onclick="openCoversModal()">⏱️ Springer verwalten & Zeiten</button>
@@ -241,62 +241,61 @@ var appData = {
     { id: 101, name: "Hassan Ali Akram", start: "07:30", end: "15:30", color: "#f59e0b" },
     { id: 102, name: "Henri Reininger", start: "11:15", end: "15:30", color: "#0284c7" },
     { id: 103, name: "Cairo Würdig", start: "11:15", end: "15:30", color: "#9333ea" },
-    { id: 104, name: "Oluwafemi J. Brown", start: "11:15", end: "15:30", color: "#ea580c" },
-    { id: 105, name: "Ayse M. Ejder", start: "11:15", end: "15:30", color: "#10b981" },
-    { id: 106, name: "Samim Honardoust", start: "11:15", end: "15:30", color: "#ec4899" },
+    { id: 104, name: "Oluwafemi Joel Brown", start: "11:15", end: "15:30", color: "#ea580c" },
+    { id: 105, name: "Bendix Meesenburg", start: "11:15", end: "15:30", color: "#10b981" },
+    { id: 106, name: "Vivek Majithia", start: "11:15", end: "15:30", color: "#ec4899" },
     { id: 107, name: "Joris Mahnke (Runner)", start: "07:30", end: "18:15", color: "#64748b" }
   ],
   people: [
-    // ZONE 1
-    { id: 17, name: "Darius-Marvin Westerhold", desc: "C32 CityCube West (Ebene 1)", zone: "Zone 1: CityCube & Halle 7 Süd", p: null },
-    { id: 20, name: "Benjamin Smajic", desc: "C36 CityCube Ost (Zwischenebene)", zone: "Zone 1: CityCube & Halle 7 Süd", p: null },
-    { id: 9,  name: "Inti Emilio Wackwitz", desc: "C19 Halle 7.2a (Ebene 2)", zone: "Zone 1: CityCube & Halle 7 Süd", p: null },
+    // ZONE 1 (3 Personen)
+    { id: 18, name: "Darius-Marvin Westerhold", desc: "C32 CityCube West (Ebene 1)", zone: "Zone 1: CityCube & Halle 7 Süd", p: null },
+    { id: 21, name: "Benjamin Smajic", desc: "C36 CityCube Ost (Zwischenebene)", zone: "Zone 1: CityCube & Halle 7 Süd", p: null },
+    { id: 9,  name: "Inti Emilio Wackwitz", desc: "C19 Halle 7/7.2a", zone: "Zone 1: CityCube & Halle 7 Süd", p: null },
 
-    // ZONE 2
-    { id: 1,  name: "Baran Cakmak", desc: "C31 Halle 1.1a/2.1a (Ebene 1)", zone: "Zone 2: Spange 1–4 West", p: null },
-    { id: 6,  name: "Lynn Magali Wende", desc: "C12 Halle 1.2a/2.2a (Ebene 2)", zone: "Zone 2: Spange 1–4 West", p: null },
-    { id: 7,  name: "Felix Spohr", desc: "C14 Halle 3.2a/4.2a (Ebene 2)", zone: "Zone 2: Spange 1–4 West", p: null },
+    // ZONE 2 (3 Personen)
+    { id: 17, name: "Baran Cakmak", desc: "C31 Halle 1.1a / 2.1a Lichthof", zone: "Zone 2: Spange 1–4 West", p: null },
+    { id: 5,  name: "Lynn Magali Wende", desc: "C12 Halle 1.2a / 2.2a", zone: "Zone 2: Spange 1–4 West", p: null },
+    { id: 6,  name: "Felix Spohr", desc: "C14 Halle 3.2a / 4.2a", zone: "Zone 2: Spange 1–4 West", p: null },
 
-    // ZONE 3
-    { id: 2,  name: "Gian Danke", desc: "C03 Halle 3.1/4.1a (Ebene 1)", zone: "Zone 3: Spange 3–7 Mitte", p: null },
-    { id: 3,  name: "Tolga Sencan", desc: "C07 Halle 7.1b Foyer (Ebene 1)", zone: "Zone 3: Spange 3–7 Mitte", p: null },
-    { id: 10, name: "Ognyana Samardzhieva", desc: "C22 Halle 7.2c/8.2 (Ebene 2)", zone: "Zone 3: Spange 3–7 Mitte", p: null },
+    // ZONE 3 (3 Personen)
+    { id: 1,  name: "Gian Danke", desc: "C03 Halle 3.1/4.1a Ost-seitig", zone: "Zone 3: Spange 3–7 Mitte", p: null },
+    { id: 2,  name: "Tolga Sencan", desc: "C07 Halle 7.1b Foyer zur Halle 4.1", zone: "Zone 3: Spange 3–7 Mitte", p: null },
+    { id: 10, name: "Ognyana Samardzhieva", desc: "C22 Halle 7.2 c / 8.2", zone: "Zone 3: Spange 3–7 Mitte", p: null },
 
-    // ZONE 4
-    { id: 22, name: "Finn Heyse", desc: "C16 Kopffoyer Halle 5.2a (Ebene 2)", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null },
-    { id: 8,  name: "Mavie Borch", desc: "C18 Halle 5.2b/6.2b (Ebene 2)", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null },
-    { id: 14, name: "Arthur Garner", desc: "C28 Halle 24 (Ebene 2)", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null },
+    // ZONE 4 (3 Personen)
+    { id: 7,  name: "Finn Heyse", desc: "C16 Kopffoyer Halle 5.2a", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null },
+    { id: 8,  name: "Ilaida Kelm", desc: "C18 Halle 5.2 b / 6.2 b", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null },
+    { id: 15, name: "Arthur Garner", desc: "C28 Halle 24", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null },
 
-    // ZONE 5
-    { id: 21, name: "Luka Obst", desc: "C38 Hub27 (Ebene 2)", zone: "Zone 5: hub27 & Halle 25/26", p: null },
-    { id: 15, name: "Princess Sarah Tuma", desc: "C29 Halle 25 (Ebene 2)", zone: "Zone 5: hub27 & Halle 25/26", p: null },
-    { id: 23, name: "Aleksa Belakova", desc: "C39 Halle 26 West (Ebene 2)", zone: "Zone 5: hub27 & Halle 25/26", p: null },
+    // ZONE 5 (3 Personen)
+    { id: 22, name: "Luka Obst", desc: "C38 Hub27", zone: "Zone 5: hub27 & Halle 25/26", p: null },
+    { id: 16, name: "Princess Sarah Tuma Gwangwa", desc: "C29 Halle 25", zone: "Zone 5: hub27 & Halle 25/26", p: null },
+    { id: 23, name: "Aleksa Belakova", desc: "C39 Halle 26", zone: "Zone 5: hub27 & Halle 25/26", p: null },
 
-    // ZONE 6
-    { id: 5,  name: "Franklin K. Ju Asante", desc: "C10 Kleiner Stern (Ebene 1)", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
-    { id: 11, name: "Melisa Korkmaz", desc: "C23 Großer Stern (Ebene 2)", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
-    { id: 16, name: "Karl Naaßner", desc: "C24 Kleiner Stern (Ebene 2)", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
-    { id: 19, name: "Aiyana Tressel", desc: "C35 Halle 14.1 (Eingang Ost)", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
+    // ZONE 6 (4 Personen)
+    { id: 4,  name: "Franklin Kiladi Ju Asante", desc: "C10 Kleiner Stern", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
+    { id: 11, name: "Melisa Korkmaz", desc: "C23 Großer Stern", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
+    { id: 12, name: "Martina Errickson", desc: "C24 Kleiner Stern", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
+    { id: 20, name: "Aiyana Tressel", desc: "C35 Halle 14.1", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
 
-    // ZONE 7
-    { id: 18, name: "Simon Ferber", desc: "C34 Eingang Halle 9 (Ebene 1)", zone: "Zone 7: Ausreißer & Weite Posten", p: null },
-    { id: 12, name: "Anna Ribbeck", desc: "C25 Eingang Nord / Palais 19", zone: "Zone 7: Ausreißer & Weite Posten", p: null },
-    { id: 13, name: "Simon Schreiner", desc: "C27 Trompete 20/21 (Ebene 2)", zone: "Zone 7: Ausreißer & Weite Posten", p: null },
+    // ZONE 7 (Ausreißer - Joris Runner)
+    { id: 19, name: "Simon Ferber", desc: "C34 Eingang Halle 9", zone: "Zone 7: Ausreißer & Weite Posten", p: null },
+    { id: 13, name: "Anna Ribbeck", desc: "C25 Vorhalle 19", zone: "Zone 7: Ausreißer & Weite Posten", p: null },
+    { id: 14, name: "Simon Schreiner", desc: "C27 Eingangsfoyer 20/21", zone: "Zone 7: Ausreißer & Weite Posten", p: null },
 
     // SELBSTSTÄNDIG
-    { id: 4,  name: "Caroline Jansen", desc: "C09 Großer Stern (Doppel)", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null },
-    { id: 25, name: "Martina Errickson", desc: "C09 Großer Stern (Doppel)", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null },
-    { id: 24, name: "Johanna Riesopp", desc: "Marshall-Haus", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null },
-    { id: 26, name: "Osaze Okodolor", desc: "Marshall-Haus", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null }
+    { id: 3,  name: "Caroline Jansen", desc: "C09 Großer Stern", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null },
+    { id: 24, name: "Johanna Riesopp", desc: "Messeleitung Marshall-Haus", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null },
+    { id: 25, name: "Osaze Okodolor", desc: "Messeleitung Marshall-Haus", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null }
   ]
 };
 
 function persist() {
-  try { localStorage.setItem("innotrans_live_zoom_v23", JSON.stringify(appData)); } catch(e){}
+  try { localStorage.setItem("innotrans_live_zoom_v24_fixed", JSON.stringify(appData)); } catch(e){}
 }
 
 var loaded = null;
-try { loaded = JSON.parse(localStorage.getItem("innotrans_live_zoom_v23")); } catch(e){}
+try { loaded = JSON.parse(localStorage.getItem("innotrans_live_zoom_v24_fixed")); } catch(e){}
 if (loaded && loaded.covers && loaded.covers.length > 0) appData = loaded;
 
 function toM(str) {
@@ -361,54 +360,73 @@ function renderTicks(range) {
   }
 }
 
-// INTELLIGENTE, DYNAMISCHE ZONEN-VERTEILUNG
+// INTELLIGENTE ZONEN-LOGIK:
+// - Hassan für Zone 6 (4 Personen ab 10:30 Uhr)
+// - 3er-Springer für Zone 1 bis 5 (ab 11:15 Uhr)
+// - Joris (Runner) für Zone 7 (Ausreißer)
 function autoDistribute() {
-  if (appData.covers.length === 0) {
-    alert("Keine Springer vorhanden. Bitte lege zuerst Springer an!");
-    return;
-  }
-
-  // 1. Zonen filtern, die wirklich Pausenspringer benötigen
-  var activeZones = ZONES.filter(function(z) {
-    return !z.toLowerCase().includes("selbstständig") && !z.toLowerCase().includes("selbstversorger");
-  });
-
-  // 2. Allen selbstständigen Posten die Pause leeren
+  // Selbstständige leeren
   appData.people.forEach(function(p) {
-    if (p.zone.toLowerCase().includes("selbstständig") || p.zone.toLowerCase().includes("selbstversorger")) {
-      p.p = null;
-    }
+    if (p.zone.toLowerCase().includes("selbstständig")) p.p = null;
   });
 
-  // 3. Zonen der Reihe nach mit den echten aktuellen Springern besetzen
-  activeZones.forEach(function(zoneName, zoneIdx) {
-    var peopleInZone = appData.people.filter(function(p){ return p.zone === zoneName; });
-    if (peopleInZone.length === 0) return;
+  // Springer identifizieren
+  var hassan = appData.covers.find(function(c){ return c.name.toLowerCase().includes("hassan"); }) || appData.covers[0];
+  var joris = appData.covers.find(function(c){ return c.name.toLowerCase().includes("joris"); });
+  
+  // Die regulären 3er-Springer (alle außer Hassan und Joris)
+  var standardCovers = appData.covers.filter(function(c){
+    return c !== hassan && c !== joris;
+  });
 
-    // Weist der Zone zyklisch einen aktuellen Springer aus covers zu
-    var cover = appData.covers[zoneIdx % appData.covers.length];
-    var coverStartM = toM(cover.start || "11:15");
-    var coverEndM = toM(cover.end || "15:30");
+  // 1. Zone 6: Sterne & Ost-Eingang (4 Stationen -> Hassan)
+  var z6People = appData.people.filter(function(p){ return p.zone === "Zone 6: Sterne & Ost-Eingang"; });
+  var hassanStart = toM("10:30");
+  z6People.forEach(function(p) {
+    p.p = {
+      start: toTimeStr(hassanStart),
+      dur: 60,
+      cover: hassan.name
+    };
+    hassanStart += 60 + 15; // 60 Min Pause + 15 Min Puffer = 75 Min Slot
+  });
 
-    // Falls ein Frühschichtler (wie Hassan) da ist, startet er ab 10:30, sonst direkt ab Dienstbeginn
-    var currentStart = (coverStartM <= 480) ? toM("10:30") : coverStartM;
-    // Garantiert auf 5 Minuten runden
-    currentStart = Math.ceil(currentStart / 5) * 5;
+  // 2. Zonen 1 bis 5 (jeweils 3 Stationen -> je ein regulärer Springer)
+  var threePersonZones = [
+    "Zone 1: CityCube & Halle 7 Süd",
+    "Zone 2: Spange 1–4 West",
+    "Zone 3: Spange 3–7 Mitte",
+    "Zone 4: Halle 5/6 & Foyer 24",
+    "Zone 5: hub27 & Halle 25/26"
+  ];
 
-    peopleInZone.forEach(function(person) {
-      var dur = 60; // Standard 60 Minuten
-      if (currentStart + dur <= coverEndM) {
-        person.p = {
-          start: toTimeStr(currentStart),
-          dur: dur,
-          cover: cover.name
-        };
-        // Exakt 15 Minuten Wegzeit-Puffer für die nächste Pause
-        currentStart = currentStart + dur + 15;
-      } else {
-        person.p = null; // Zeit reicht nicht mehr vor Feierabend
-      }
+  threePersonZones.forEach(function(zoneName, idx) {
+    var pList = appData.people.filter(function(p){ return p.zone === zoneName; });
+    var assignedCover = standardCovers[idx % standardCovers.length];
+    if (!assignedCover) return;
+
+    var curStart = toM(assignedCover.start || "11:15");
+    pList.forEach(function(p) {
+      p.p = {
+        start: toTimeStr(curStart),
+        dur: 60,
+        cover: assignedCover.name
+      };
+      curStart += 60 + 15; // 15 Min Wegzeit-Puffer
     });
+  });
+
+  // 3. Zone 7: Ausreißer & Weite Posten (3 Stationen -> Joris Runner)
+  var z7People = appData.people.filter(function(p){ return p.zone === "Zone 7: Ausreißer & Weite Posten"; });
+  var runnerCover = joris || standardCovers[standardCovers.length - 1];
+  var runnerStart = toM("11:30");
+  z7People.forEach(function(p) {
+    p.p = {
+      start: toTimeStr(runnerStart),
+      dur: 60,
+      cover: runnerCover.name
+    };
+    runnerStart += 60 + 15;
   });
 
   persist();
