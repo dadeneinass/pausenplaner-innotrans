@@ -34,7 +34,7 @@
     .badge-cov { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 4px; font-weight: bold; color: #fff; }
 
     #capture-area { background: var(--bg); padding: 4px; border-radius: 8px; }
-    .gantt-container { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+    .gantt-container { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 20px; position: relative; }
     .timeline-head { height: 30px; display: flex; margin-left: 260px; border-bottom: 1px solid var(--border); position: relative; background: #080d1a; }
     .tick-label { position: absolute; transform: translateX(-50%); font-size: 0.7rem; color: var(--muted); font-weight: 600; top: 7px; }
 
@@ -47,6 +47,32 @@
     .row-sub { font-size: 0.68rem; color: var(--muted); }
     
     .row-track { flex: 1; height: 100%; position: relative; }
+
+    /* ROTE LIVE-LINIE */
+    .now-indicator-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #ef4444;
+      z-index: 25;
+      pointer-events: none;
+      box-shadow: 0 0 6px rgba(239, 68, 68, 0.8);
+    }
+    .now-indicator-badge {
+      position: absolute;
+      top: 2px;
+      transform: translateX(-50%);
+      background: #ef4444;
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 1px 4px;
+      border-radius: 3px;
+      white-space: nowrap;
+      z-index: 26;
+      pointer-events: none;
+    }
 
     .bar {
       position: absolute; top: 4px; height: 30px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; color: #fff;
@@ -91,7 +117,7 @@
   <div class="top-bar">
     <div>
       <h1>InnoTrans 2026 – Pausen- & Zonen-Planung</h1>
-      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">5-Minuten-Raster • Wegzeit-Warnung • Status Fehlt vs. Selbstständig</div>
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">Dynamischer Zeitbereich • Live-Uhrzeitlinie • 5-Minuten-Raster</div>
     </div>
     <div class="btn-group">
       <button class="btn-util" onclick="openCoversModal()">⏱️ Springer-Zeiten & Namen</button>
@@ -104,7 +130,7 @@
 
   <div id="capture-area">
     <div class="legend-bar" id="legend-box"></div>
-    <div class="gantt-container">
+    <div class="gantt-container" id="gantt-main-container">
       <div class="timeline-head" id="timeline-ticks"></div>
       <div id="gantt-body"></div>
     </div>
@@ -215,43 +241,43 @@ var appData = {
     { id: 107, name: "Joris Mahnke (Runner)", start: "07:30", end: "18:15", color: "#64748b" }
   ],
   people: [
-    // ZONE 1 (Henri)
+    // ZONE 1
     { id: 17, name: "Darius-Marvin Westerhold", desc: "C32 CityCube West (Ebene 1)", zone: "Zone 1: CityCube & Halle 7 Süd", p: null },
     { id: 20, name: "Benjamin Smajic", desc: "C36 CityCube Ost (Zwischenebene)", zone: "Zone 1: CityCube & Halle 7 Süd", p: null },
     { id: 9,  name: "Inti Emilio Wackwitz", desc: "C19 Halle 7.2a (Ebene 2)", zone: "Zone 1: CityCube & Halle 7 Süd", p: null },
 
-    // ZONE 2 (Cairo)
+    // ZONE 2
     { id: 1,  name: "Baran Cakmak", desc: "C31 Halle 1.1a/2.1a (Ebene 1)", zone: "Zone 2: Spange 1–4 West", p: null },
     { id: 6,  name: "Lynn Magali Wende", desc: "C12 Halle 1.2a/2.2a (Ebene 2)", zone: "Zone 2: Spange 1–4 West", p: null },
     { id: 7,  name: "Felix Spohr", desc: "C14 Halle 3.2a/4.2a (Ebene 2)", zone: "Zone 2: Spange 1–4 West", p: null },
 
-    // ZONE 3 (Joel)
+    // ZONE 3
     { id: 2,  name: "Gian Danke", desc: "C03 Halle 3.1/4.1a (Ebene 1)", zone: "Zone 3: Spange 3–7 Mitte", p: null },
     { id: 3,  name: "Tolga Sencan", desc: "C07 Halle 7.1b Foyer (Ebene 1)", zone: "Zone 3: Spange 3–7 Mitte", p: null },
     { id: 10, name: "Ognyana Samardzhieva", desc: "C22 Halle 7.2c/8.2 (Ebene 2)", zone: "Zone 3: Spange 3–7 Mitte", p: null },
 
-    // ZONE 4 (Ayse)
+    // ZONE 4
     { id: 22, name: "Finn Heyse", desc: "C16 Kopffoyer Halle 5.2a (Ebene 2)", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null },
     { id: 8,  name: "Mavie Borch", desc: "C18 Halle 5.2b/6.2b (Ebene 2)", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null },
     { id: 14, name: "Arthur Garner", desc: "C28 Halle 24 (Ebene 2)", zone: "Zone 4: Halle 5/6 & Foyer 24", p: null },
 
-    // ZONE 5 (Samim)
+    // ZONE 5
     { id: 21, name: "Luka Obst", desc: "C38 Hub27 (Ebene 2)", zone: "Zone 5: hub27 & Halle 25/26", p: null },
     { id: 15, name: "Princess Sarah Tuma", desc: "C29 Halle 25 (Ebene 2)", zone: "Zone 5: hub27 & Halle 25/26", p: null },
     { id: 23, name: "Aleksa Belakova", desc: "C39 Halle 26 West (Ebene 2)", zone: "Zone 5: hub27 & Halle 25/26", p: null },
 
-    // ZONE 6 (Hassan)
+    // ZONE 6
     { id: 5,  name: "Franklin K. Ju Asante", desc: "C10 Kleiner Stern (Ebene 1)", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
     { id: 11, name: "Melisa Korkmaz", desc: "C23 Großer Stern (Ebene 2)", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
     { id: 16, name: "Karl Naaßner", desc: "C24 Kleiner Stern (Ebene 2)", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
     { id: 19, name: "Aiyana Tressel", desc: "C35 Halle 14.1 (Eingang Ost)", zone: "Zone 6: Sterne & Ost-Eingang", p: null },
 
-    // ZONE 7 (Joris Runner)
+    // ZONE 7
     { id: 18, name: "Simon Ferber", desc: "C34 Eingang Halle 9 (Ebene 1)", zone: "Zone 7: Ausreißer & Weite Posten", p: null },
     { id: 12, name: "Anna Ribbeck", desc: "C25 Eingang Nord / Palais 19", zone: "Zone 7: Ausreißer & Weite Posten", p: null },
     { id: 13, name: "Simon Schreiner", desc: "C27 Trompete 20/21 (Ebene 2)", zone: "Zone 7: Ausreißer & Weite Posten", p: null },
 
-    // SELBSTSTÄNDIG (Marshall-Haus & Großer Stern)
+    // SELBSTSTÄNDIG
     { id: 4,  name: "Caroline Jansen", desc: "C09 Großer Stern (Doppel)", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null },
     { id: 25, name: "Martina Errickson", desc: "C09 Großer Stern (Doppel)", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null },
     { id: 24, name: "Johanna Riesopp", desc: "Marshall-Haus", zone: "Marshall-Haus & Großer Stern (selbstständig)", p: null },
@@ -260,11 +286,11 @@ var appData = {
 };
 
 function persist() {
-  try { localStorage.setItem("innotrans_final_stable_v19", JSON.stringify(appData)); } catch(e){}
+  try { localStorage.setItem("innotrans_live_zoom_v20", JSON.stringify(appData)); } catch(e){}
 }
 
 var loaded = null;
-try { loaded = JSON.parse(localStorage.getItem("innotrans_final_stable_v19")); } catch(e){}
+try { loaded = JSON.parse(localStorage.getItem("innotrans_live_zoom_v20")); } catch(e){}
 if (loaded && loaded.covers && loaded.covers.length > 0) appData = loaded;
 
 function toM(str) {
@@ -279,15 +305,53 @@ function toTimeStr(mins) {
   return h + ":" + m;
 }
 
-var T_START = 600; // 10:00
-var T_END = 960;   // 16:00
-var T_TOTAL = T_END - T_START;
+function getCurrentMinutes() {
+  var d = new Date();
+  return d.getHours() * 60 + d.getMinutes();
+}
 
-function renderTicks() {
+// DYNAMISCHER AUTO-ZOOM
+function getDynamicRange() {
+  var starts = [600]; // min. 10:00
+  var ends = [960];   // min. 16:00
+
+  // Berücksichtige aktuelle Uhrzeit
+  var nowM = getCurrentMinutes();
+  if (nowM >= 420 && nowM <= 1260) {
+    starts.push(nowM);
+    ends.push(nowM + 30);
+  }
+
+  // Berücksichtige eingetragene Pausen
+  appData.people.forEach(function(p) {
+    if (p.p) {
+      var s = toM(p.p.start);
+      starts.push(s);
+      ends.push(s + (p.p.dur || 60));
+    }
+  });
+
+  // Berücksichtige Schichtzeiten
+  appData.covers.forEach(function(c) {
+    if (c.start) starts.push(toM(c.start));
+    if (c.end) ends.push(toM(c.end));
+  });
+
+  var minM = Math.min.apply(null, starts);
+  var maxM = Math.max.apply(null, ends);
+
+  // Runde Start nach unten auf 30m, Ende nach oben auf 30m
+  var rStart = Math.max(420, Math.floor(minM / 30) * 30); // frühestens 07:00
+  var rEnd = Math.min(1260, Math.ceil(maxM / 30) * 30 + 30); // spätestens 21:00
+
+  return { start: rStart, end: rEnd, total: rEnd - rStart };
+}
+
+function renderTicks(range) {
   var el = document.getElementById("timeline-ticks");
   el.innerHTML = "";
-  for (var m = T_START; m <= T_END; m += 30) {
-    var pct = ((m - T_START) / T_TOTAL) * 100;
+  for (var m = range.start; m <= range.end; m += 30) {
+    var pct = ((m - range.start) / range.total) * 100;
     var d = document.createElement("div");
     d.className = "tick-label";
     d.style.left = pct + "%";
@@ -364,7 +428,8 @@ function captureAndDownload() {
 }
 
 function render() {
-  renderTicks();
+  var range = getDynamicRange();
+  renderTicks(range);
 
   var allBreaks = [];
   appData.people.forEach(function(p) {
@@ -425,6 +490,11 @@ function render() {
   var gBody = document.getElementById("gantt-body");
   gBody.innerHTML = "";
 
+  // BERECHNUNG DER ROTEN JETZT-LINIE
+  var nowM = getCurrentMinutes();
+  var isNowVisible = (nowM >= range.start && nowM <= range.end);
+  var nowPct = isNowVisible ? (((nowM - range.start) / range.total) * 100) : null;
+
   ZONES.forEach(function(zoneName) {
     var peopleInZone = appData.people.filter(function(p){ return p.zone === zoneName; });
     if (peopleInZone.length === 0) return;
@@ -445,6 +515,14 @@ function render() {
 
       var track = document.createElement("div");
       track.className = "row-track";
+
+      // Jetzt-Linie in jeder Zeile einblenden
+      if (isNowVisible && nowPct !== null) {
+        var nowLine = document.createElement("div");
+        nowLine.className = "now-indicator-line";
+        nowLine.style.left = nowPct + "%";
+        track.appendChild(nowLine);
+      }
 
       var b = allBreaks.find(function(x){ return x.pId === p.id; });
       if (b) {
@@ -471,12 +549,12 @@ function render() {
         }
 
         bar.className = "bar " + warnClasses;
-        bar.style.left = Math.max(0, ((b.start - T_START) / T_TOTAL) * 100) + "%";
-        bar.style.width = ((b.dur / T_TOTAL) * 100) + "%";
+        bar.style.left = Math.max(0, ((b.start - range.start) / range.total) * 100) + "%";
+        bar.style.width = ((b.dur / range.total) * 100) + "%";
         bar.style.background = color;
         bar.innerText = labelPrefix + b.cover.split(" ")[0] + " • " + toTimeStr(b.start);
 
-        initDesktopDrag(bar, p.id, track);
+        initDesktopDrag(bar, p.id, track, range);
 
         bar.onclick = function(e) {
           if (!bar.dataset.dragged) openModal(p.id);
@@ -490,10 +568,24 @@ function render() {
     });
   });
 
+  // Jetzt-Badge ganz oben auf der Timeline-Leiste
+  var oldBadge = document.getElementById("now-badge-el");
+  if (oldBadge) oldBadge.remove();
+  if (isNowVisible && nowPct !== null) {
+    var headEl = document.getElementById("timeline-ticks");
+    var badge = document.createElement("div");
+    badge.id = "now-badge-el";
+    badge.className = "now-indicator-badge";
+    badge.style.left = nowPct + "%";
+    badge.innerText = "JETZT " + toTimeStr(nowM);
+    headEl.appendChild(badge);
+  }
+
   renderTable();
 }
 
-function initDesktopDrag(barEl, personId, trackEl) {
+// 5-MINUTEN-RASTER BEIM VERSCHIEBEN MIT DYNAMISCHER RANGE
+function initDesktopDrag(barEl, personId, trackEl, range) {
   var startX = 0, origLeftPct = 0, isDragging = false;
 
   barEl.onmousedown = function(e) {
@@ -521,7 +613,7 @@ function initDesktopDrag(barEl, personId, trackEl) {
 
       if (barEl.dataset.dragged === "true") {
         var finalPct = parseFloat(barEl.style.left);
-        var currentMins = T_START + (finalPct / 100) * T_TOTAL;
+        var currentMins = range.start + (finalPct / 100) * range.total;
         var snappedMins = Math.round(currentMins / 5) * 5;
         
         var person = appData.people.find(function(x){ return x.id === personId; });
@@ -535,7 +627,6 @@ function initDesktopDrag(barEl, personId, trackEl) {
   };
 }
 
-// TABELLE UNTEN (Strukturierte Spalten + Status-Logik)
 function renderTable() {
   var tb = document.getElementById("table-body");
   tb.innerHTML = "";
@@ -719,7 +810,11 @@ function saveTeamModal() {
   render();
 }
 
+// Initial rendern & Live-Uhrzeit jede Minute aktualisieren
 render();
+setInterval(function() {
+  render();
+}, 60000);
 </script>
 </body>
 </html>
