@@ -81,8 +81,13 @@
     }
     .bar:active { cursor: grabbing; box-shadow: 0 4px 12px rgba(0,0,0,0.8); z-index: 10; opacity: 0.9; }
     
+    /* Echte Doppelbelegung */
     .bar-conflict { background: #dc2626 !important; border: 2px solid #fff !important; animation: blink 1s infinite alternate; }
+    /* Schichtzeit überschritten (Feierabend) */
+    .bar-overtime { background: repeating-linear-gradient(45deg, #b91c1c, #b91c1c 10px, #7f1d1d 10px, #7f1d1d 20px) !important; border: 2px solid #f87171 !important; }
+    /* Wegzeit unter 10 Minuten */
     .bar-wegzeit-danger { border: 2px dashed #ef4444 !important; }
+    /* Wegzeit 10 bis unter 15 Minuten */
     .bar-wegzeit-warn { border: 2px dashed #f59e0b !important; }
 
     @keyframes blink {
@@ -90,11 +95,12 @@
       to { box-shadow: 0 0 12px #f87171; }
     }
 
+    /* AUFGERÄUMTE TABELLE UNTEN */
     .table-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 16px; }
     table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
     th { text-align: left; padding: 10px 8px; color: var(--muted); border-bottom: 2px solid var(--border); font-weight: 700; }
     td { padding: 8px; border-bottom: 1px solid #1a2744; vertical-align: middle; }
-    select, input[type="text"], input[type="time"], input[type="number"] { background: #0c1424; border: 1px solid var(--border); color: #fff; padding: 5px 8px; border-radius: 4px; font-size: 0.8rem; }
+    select, input[type="text"], input[type="time"], input[type="number"], input[type="color"] { background: #0c1424; border: 1px solid var(--border); color: #fff; padding: 5px 8px; border-radius: 4px; font-size: 0.8rem; }
     .btn-edit { background: #243354; color: #fff; border: 1px solid var(--border); padding: 5px 12px; border-radius: 4px; cursor: pointer; }
     .btn-edit:hover { background: #334155; }
 
@@ -102,7 +108,7 @@
     .status-selbst { color: var(--muted); font-style: italic; }
 
     .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 999; }
-    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; width: 440px; max-height: 90vh; overflow-y: auto; padding: 16px; }
+    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; width: 480px; max-height: 90vh; overflow-y: auto; padding: 16px; }
     .modal-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 6px; }
 
     body.screenshot-mode .table-card, 
@@ -117,10 +123,10 @@
   <div class="top-bar">
     <div>
       <h1>InnoTrans 2026 – Pausen- & Zonen-Planung</h1>
-      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">Dynamischer Zeitbereich • Live-Uhrzeitlinie • 5-Minuten-Raster</div>
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">Springer frei erweiterbar • Feierabend-Warnung • Dynamischer Auto-Zoom</div>
     </div>
     <div class="btn-group">
-      <button class="btn-util" onclick="openCoversModal()">⏱️ Springer-Zeiten & Namen</button>
+      <button class="btn-util" onclick="openCoversModal()">⏱️ Springer verwalten & Zeiten</button>
       <button class="btn-util" onclick="openTeamModal()">👥 Team bearbeiten</button>
       <button class="btn-auto" onclick="autoDistribute()">⚡ Pausen nach Zonen verteilen</button>
       <button class="btn-shot" id="shot-btn" onclick="captureAndDownload()">📸 Screenshot & Download</button>
@@ -194,12 +200,17 @@
     </div>
   </div>
 
-  <!-- MODAL: SPRINGER-ZEITEN & NAMEN -->
+  <!-- MODAL: SPRINGER VERWALTEN -->
   <div class="modal" id="covers-modal" style="display:none;" onclick="closeCoversModal()">
-    <div class="modal-box" onclick="event.stopPropagation()" style="width:500px;">
-      <h3 style="color:var(--primary); margin-bottom:10px;">⏱️ Springer-Zeiten & Namen</h3>
+    <div class="modal-box" onclick="event.stopPropagation()" style="width:540px;">
+      <h3 style="color:var(--primary); margin-bottom:6px;">⏱️ Springer verwalten & Schichtzeiten</h3>
+      <p style="font-size:0.75rem; color:var(--muted); margin-bottom:12px;">Pausen nach Schichtende werden auf dem Zeitstrahl als Warnung markiert.</p>
+      
       <div id="covers-list-box"></div>
-      <div style="margin-top:14px; text-align:right;">
+      
+      <button style="background:#243354; color:#fff; width:100%; margin-top:10px;" onclick="addCoverMember()">+ Neuen Springer hinzufügen</button>
+
+      <div style="margin-top:16px; text-align:right;">
         <button style="background:var(--primary); color:#000;" onclick="saveCoversModal()">Speichern & Schließen</button>
       </div>
     </div>
@@ -286,11 +297,11 @@ var appData = {
 };
 
 function persist() {
-  try { localStorage.setItem("innotrans_live_zoom_v20", JSON.stringify(appData)); } catch(e){}
+  try { localStorage.setItem("innotrans_live_zoom_v22", JSON.stringify(appData)); } catch(e){}
 }
 
 var loaded = null;
-try { loaded = JSON.parse(localStorage.getItem("innotrans_live_zoom_v20")); } catch(e){}
+try { loaded = JSON.parse(localStorage.getItem("innotrans_live_zoom_v22")); } catch(e){}
 if (loaded && loaded.covers && loaded.covers.length > 0) appData = loaded;
 
 function toM(str) {
@@ -310,19 +321,16 @@ function getCurrentMinutes() {
   return d.getHours() * 60 + d.getMinutes();
 }
 
-// DYNAMISCHER AUTO-ZOOM
 function getDynamicRange() {
   var starts = [600]; // min. 10:00
   var ends = [960];   // min. 16:00
 
-  // Berücksichtige aktuelle Uhrzeit
   var nowM = getCurrentMinutes();
   if (nowM >= 420 && nowM <= 1260) {
     starts.push(nowM);
     ends.push(nowM + 30);
   }
 
-  // Berücksichtige eingetragene Pausen
   appData.people.forEach(function(p) {
     if (p.p) {
       var s = toM(p.p.start);
@@ -331,7 +339,6 @@ function getDynamicRange() {
     }
   });
 
-  // Berücksichtige Schichtzeiten
   appData.covers.forEach(function(c) {
     if (c.start) starts.push(toM(c.start));
     if (c.end) ends.push(toM(c.end));
@@ -340,9 +347,8 @@ function getDynamicRange() {
   var minM = Math.min.apply(null, starts);
   var maxM = Math.max.apply(null, ends);
 
-  // Runde Start nach unten auf 30m, Ende nach oben auf 30m
-  var rStart = Math.max(420, Math.floor(minM / 30) * 30); // frühestens 07:00
-  var rEnd = Math.min(1260, Math.ceil(maxM / 30) * 30 + 30); // spätestens 21:00
+  var rStart = Math.max(420, Math.floor(minM / 30) * 30);
+  var rEnd = Math.min(1260, Math.ceil(maxM / 30) * 30 + 30);
 
   return { start: rStart, end: rEnd, total: rEnd - rStart };
 }
@@ -451,9 +457,25 @@ function render() {
   var conflictPIds = new Set();
   var wegzeitDangerPIds = new Set();
   var wegzeitWarnPIds = new Set();
+  var overtimeInfo = {};
 
   allBreaks.sort(function(a, b){ return a.start - b.start; });
 
+  // 1. Feierabend-Prüfung
+  allBreaks.forEach(function(b) {
+    var covObj = appData.covers.find(function(c){ return c.name === b.cover; });
+    if (covObj && covObj.end && covObj.start) {
+      var sEnd = toM(covObj.end);
+      var sStart = toM(covObj.start);
+      if (b.end > sEnd) {
+        overtimeInfo[b.pId] = "FEIERABEND (Ende " + covObj.end + ")";
+      } else if (b.start < sStart) {
+        overtimeInfo[b.pId] = "VOR DIENST (Start " + covObj.start + ")";
+      }
+    }
+  });
+
+  // 2. Konflikt- & Wegzeit-Prüfung
   for (var i = 0; i < allBreaks.length; i++) {
     for (var j = i + 1; j < allBreaks.length; j++) {
       var b1 = allBreaks[i];
@@ -490,7 +512,6 @@ function render() {
   var gBody = document.getElementById("gantt-body");
   gBody.innerHTML = "";
 
-  // BERECHNUNG DER ROTEN JETZT-LINIE
   var nowM = getCurrentMinutes();
   var isNowVisible = (nowM >= range.start && nowM <= range.end);
   var nowPct = isNowVisible ? (((nowM - range.start) / range.total) * 100) : null;
@@ -516,7 +537,6 @@ function render() {
       var track = document.createElement("div");
       track.className = "row-track";
 
-      // Jetzt-Linie in jeder Zeile einblenden
       if (isNowVisible && nowPct !== null) {
         var nowLine = document.createElement("div");
         nowLine.className = "now-indicator-line";
@@ -527,6 +547,7 @@ function render() {
       var b = allBreaks.find(function(x){ return x.pId === p.id; });
       if (b) {
         var isConflict = conflictPIds.has(p.id);
+        var isOvertime = overtimeInfo[p.id];
         var isWegzeitDanger = wegzeitDangerPIds.has(p.id) && !isConflict;
         var isWegzeitWarn = wegzeitWarnPIds.has(p.id) && !isConflict && !isWegzeitDanger;
 
@@ -540,6 +561,9 @@ function render() {
         if (isConflict) {
           warnClasses = "bar-conflict";
           labelPrefix = "⚠️ DOPPELBELEGUNG: ";
+        } else if (isOvertime) {
+          warnClasses = "bar-overtime";
+          labelPrefix = "⚠️ " + isOvertime + ": ";
         } else if (isWegzeitDanger) {
           warnClasses = "bar-wegzeit-danger";
           labelPrefix = "⚠️ Achtung Wegzeit: ";
@@ -568,7 +592,6 @@ function render() {
     });
   });
 
-  // Jetzt-Badge ganz oben auf der Timeline-Leiste
   var oldBadge = document.getElementById("now-badge-el");
   if (oldBadge) oldBadge.remove();
   if (isNowVisible && nowPct !== null) {
@@ -584,7 +607,6 @@ function render() {
   renderTable();
 }
 
-// 5-MINUTEN-RASTER BEIM VERSCHIEBEN MIT DYNAMISCHER RANGE
 function initDesktopDrag(barEl, personId, trackEl, range) {
   var startX = 0, origLeftPct = 0, isDragging = false;
 
@@ -733,9 +755,11 @@ function openCoversModal() {
     var row = document.createElement("div");
     row.className = "modal-row";
     row.innerHTML = 
-      '<input type="text" value="' + c.name + '" id="cov-name-' + i + '" style="flex:2;">' +
-      '<input type="time" value="' + (c.start||"11:15") + '" id="cov-start-' + i + '" style="flex:1;">' +
-      '<input type="time" value="' + (c.end||"15:30") + '" id="cov-end-' + i + '" style="flex:1;">';
+      '<input type="color" value="' + (c.color||"#0284c7") + '" id="cov-col-' + i + '" style="width:36px; padding:0; height:30px; cursor:pointer;" title="Farbe">' +
+      '<input type="text" value="' + c.name + '" id="cov-name-' + i + '" style="flex:2;" placeholder="Name">' +
+      '<input type="time" value="' + (c.start||"11:15") + '" id="cov-start-' + i + '" style="flex:1;" title="Dienstbeginn">' +
+      '<input type="time" value="' + (c.end||"15:30") + '" id="cov-end-' + i + '" style="flex:1;" title="Feierabend">' +
+      '<button type="button" style="color:var(--danger); background:transparent; padding:4px;" onclick="removeCoverMember(' + i + ')">✕</button>';
     box.appendChild(row);
   });
 
@@ -744,14 +768,36 @@ function openCoversModal() {
 
 function closeCoversModal() { document.getElementById("covers-modal").style.display = "none"; }
 
+function addCoverMember() {
+  var defaultColors = ["#0284c7", "#9333ea", "#ea580c", "#10b981", "#ec4899", "#f59e0b", "#64748b", "#06b6d4"];
+  var nextCol = defaultColors[appData.covers.length % defaultColors.length];
+  appData.covers.push({
+    id: Date.now(),
+    name: "Neuer Springer",
+    start: "11:15",
+    end: "15:30",
+    color: nextCol
+  });
+  openCoversModal();
+}
+
+function removeCoverMember(idx) {
+  if (confirm("Springer '" + appData.covers[idx].name + "' wirklich entfernen?")) {
+    appData.covers.splice(idx, 1);
+    openCoversModal();
+  }
+}
+
 function saveCoversModal() {
   appData.covers.forEach(function(c, i) {
     var n = document.getElementById("cov-name-" + i).value.trim();
     var s = document.getElementById("cov-start-" + i).value;
     var e = document.getElementById("cov-end-" + i).value;
+    var col = document.getElementById("cov-col-" + i).value;
     if (n) c.name = n;
     if (s) c.start = s;
     if (e) c.end = e;
+    if (col) c.color = col;
   });
   persist();
   closeCoversModal();
@@ -810,7 +856,6 @@ function saveTeamModal() {
   render();
 }
 
-// Initial rendern & Live-Uhrzeit jede Minute aktualisieren
 render();
 setInterval(function() {
   render();
